@@ -147,9 +147,6 @@
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
-    background-image: radial-gradient(
-challenge 1px, transparent 0
-    );
   }
 
   h1,
