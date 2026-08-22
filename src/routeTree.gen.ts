@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as BooksRouteImport } from './routes/books'
+import { Route as CirculationRouteImport } from './routes/circulation'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -28,35 +29,44 @@ const BooksRoute = BooksRouteImport.update({
   path: '/books',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CirculationRoute = CirculationRouteImport.update({
+  id: '/circulation',
+  path: '/circulation',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/books': typeof BooksRoute
+  '/circulation': typeof CirculationRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/books': typeof BooksRoute
+  '/circulation': typeof CirculationRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/books': typeof BooksRoute
+  '/circulation': typeof CirculationRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/books'
+  fullPaths: '/' | '/auth' | '/books' | '/circulation'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/books'
-  id: '__root__' | '/' | '/auth' | '/books'
+  to: '/' | '/auth' | '/books' | '/circulation'
+  id: '__root__' | '/' | '/auth' | '/books' | '/circulation'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRoute
   BooksRoute: typeof BooksRoute
+  CirculationRoute: typeof CirculationRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -82,6 +92,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BooksRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/circulation': {
+      id: '/circulation'
+      path: '/circulation'
+      fullPath: '/circulation'
+      preLoaderRoute: typeof CirculationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -89,6 +106,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
   BooksRoute: BooksRoute,
+  CirculationRoute: CirculationRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
