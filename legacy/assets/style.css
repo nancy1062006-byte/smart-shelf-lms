@@ -1,0 +1,173 @@
+/* ============================================================
+   Smart-Shelf — stylesheet (plain CSS, layered on Bootstrap 5)
+   Navy academic palette
+   ============================================================ */
+
+:root {
+    --ss-navy:        #0f2547;
+    --ss-navy-deep:   #081729;
+    --ss-steel:       #3d6ea8;
+    --ss-steel-soft:  #e8eef6;
+    --ss-paper:       #f7f9fc;
+    --ss-ink:         #14243d;
+    --ss-muted:       #66788f;
+    --ss-line:        #d8e1ed;
+    --ss-danger:      #b5333a;
+    --ss-success:     #1d7a52;
+    --ss-radius:      12px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    background: var(--ss-paper);
+    color: var(--ss-ink);
+    font-family: "DM Sans", "Segoe UI", system-ui, sans-serif;
+    line-height: 1.55;
+}
+
+h1, h2, h3, .brand {
+    font-family: "Fraunces", Georgia, serif;
+    letter-spacing: -0.01em;
+}
+
+/* ---------- Navigation ---------- */
+.navbar-ss {
+    background: var(--ss-navy);
+    padding: 0.85rem 0;
+}
+.navbar-ss .brand {
+    color: #fff;
+    font-size: 1.35rem;
+    font-weight: 700;
+    text-decoration: none;
+}
+.navbar-ss .nav-link {
+    color: rgba(255, 255, 255, 0.78);
+    font-weight: 500;
+}
+.navbar-ss .nav-link:hover,
+.navbar-ss .nav-link.active {
+    color: #fff;
+}
+
+/* ---------- Hero ---------- */
+.hero {
+    background: linear-gradient(160deg, var(--ss-navy) 0%, var(--ss-navy-deep) 100%);
+    color: #fff;
+    padding: 4.5rem 0;
+}
+.hero p { color: rgba(255, 255, 255, 0.82); }
+
+/* ---------- Cards ---------- */
+.card-ss {
+    background: #fff;
+    border: 1px solid var(--ss-line);
+    border-radius: var(--ss-radius);
+    box-shadow: 0 1px 2px rgba(15, 37, 71, 0.05);
+    height: 100%;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.card-ss:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(15, 37, 71, 0.1);
+}
+.card-ss .card-body { padding: 1.25rem; }
+
+.stat-value {
+    font-family: "Fraunces", Georgia, serif;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--ss-navy);
+}
+.stat-label {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ss-muted);
+}
+
+/* ---------- Badges & buttons ---------- */
+.chip {
+    display: inline-block;
+    padding: 0.15rem 0.6rem;
+    border-radius: 999px;
+    background: var(--ss-steel-soft);
+    color: var(--ss-steel);
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+.chip-danger  { background: #fbe9ea; color: var(--ss-danger); }
+.chip-success { background: #e5f4ed; color: var(--ss-success); }
+
+.btn-ss {
+    background: var(--ss-navy);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+}
+.btn-ss:hover:not(:disabled) { background: var(--ss-steel); color: #fff; }
+.btn-ss:disabled { opacity: 0.5; }
+
+.btn-ss-outline {
+    background: transparent;
+    color: var(--ss-navy);
+    border: 1px solid var(--ss-line);
+    border-radius: 8px;
+    font-weight: 600;
+}
+.btn-ss-outline:hover { background: var(--ss-steel-soft); }
+
+.filter-pill { margin: 0 0.35rem 0.35rem 0; }
+
+/* ---------- Tables ---------- */
+.table-ss {
+    background: #fff;
+    border: 1px solid var(--ss-line);
+    border-radius: var(--ss-radius);
+    overflow: hidden;
+}
+.table-ss th {
+    background: var(--ss-steel-soft);
+    color: var(--ss-navy);
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+/* ---------- Toast ---------- */
+#toast-stack {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    z-index: 1080;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+.toast-ss {
+    background: var(--ss-navy);
+    color: #fff;
+    padding: 0.7rem 1rem;
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+    font-size: 0.9rem;
+    animation: slide-in 0.2s ease;
+}
+.toast-ss.error   { background: var(--ss-danger); }
+.toast-ss.success { background: var(--ss-success); }
+
+@keyframes slide-in {
+    from { opacity: 0; transform: translateX(12px); }
+    to   { opacity: 1; transform: none; }
+}
+
+footer.site-footer {
+    background: var(--ss-navy-deep);
+    color: rgba(255, 255, 255, 0.7);
+    padding: 2rem 0;
+    margin-top: 4rem;
+    font-size: 0.9rem;
+}
