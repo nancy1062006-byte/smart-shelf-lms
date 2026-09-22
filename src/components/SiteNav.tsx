@@ -28,6 +28,7 @@ export function SiteNav() {
   const links = [
     { to: "/", label: "Home" },
     { to: "/books", label: "Books" },
+    ...(user ? [{ to: "/dashboard", label: "My Dashboard" }] : []),
     ...(user ? [{ to: "/circulation", label: "Issue / Return" }] : []),
     ...(role === "librarian" ? [{ to: "/admin", label: "Admin" }] : []),
   ] as const;
