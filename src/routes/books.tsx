@@ -43,6 +43,21 @@ function BooksPage() {
     },
   });
 
+  const { data: myIssues = [] } = useQuery({
+    queryKey: ["my-issues"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("issued_books")
+        .select("book_id")
+        .eq("status", "issued");
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+  });
+
+  const issuedBookIds = useMemo(() => new Set(myIssues.map((i) => i.book_id)), [myIssues]);
+
   const categories = useMemo(() => ["All", ...Array.from(new Set(books.map((b) => b.category))).sort()], [books]);
 
   const filtered = useMemo(() => {
@@ -128,13 +143,19 @@ function BooksPage() {
                   </div>
                   <div className="mt-5 pt-1">
                     {user ? (
-                      <Button
-                        className="w-full"
-                        disabled={book.available_copies < 1 || issueMutation.isPending}
-                        onClick={() => issueMutation.mutate(book.id)}
-                      >
-                        {book.available_copies > 0 ? "Issue book" : "All copies out"}
-                      </Button>
+                      issuedBookIds.has(book.id) ? (
+                        <Button className="w-full" disabled>
+                          Already issued
+                        </Button>
+                      ) : (
+                        <Button
+                          className="w-full"
+                          disabled={book.available_copies < 1 || issueMutation.isPending}
+                          onClick={() => issueMutation.mutate(book.id)}
+                        >
+                          {book.available_copies > 0 ? "Issue book" : "All copies out"}
+                        </Button>
+                      )
                     ) : (
                       <Button asChild variant="outline" className="w-full">
                         <Link to="/auth">Sign in to borrow</Link>
