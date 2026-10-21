@@ -43,6 +43,21 @@ function BooksPage() {
     },
   });
 
+  const { data: myIssues = [] } = useQuery({
+    queryKey: ["my-issues"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("issued_books")
+        .select("book_id")
+        .eq("status", "issued");
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+  });
+
+  const issuedBookIds = useMemo(() => new Set(myIssues.map((i) => i.book_id)), [myIssues]);
+
   const categories = useMemo(() => ["All", ...Array.from(new Set(books.map((b) => b.category))).sort()], [books]);
 
   const filtered = useMemo(() => {
