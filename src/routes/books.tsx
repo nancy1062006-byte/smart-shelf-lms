@@ -125,12 +125,24 @@ function BooksPage() {
         ) : (
           <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {filtered.map((book) => (
-              <Card key={book.id} className="surface-paper flex flex-col">
-                <CardContent className="flex flex-1 flex-col pt-6">
-                  <Badge variant="secondary" className="w-fit">
-                    {book.category}
-                  </Badge>
-                  <h2 className="mt-3 font-display text-xl font-semibold leading-snug">{book.title}</h2>
+              <Card key={book.id} className="surface-paper flex flex-col overflow-hidden">
+                <div className="relative h-56 w-full overflow-hidden border-b border-border bg-secondary/60">
+                  {book.cover_url ? (
+                    <img
+                      src={book.cover_url}
+                      alt={`Cover of ${book.title}`}
+                      loading="lazy"
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-full items-center justify-center">
+                      <BookOpen className="size-10 text-muted-foreground/50" />
+                    </div>
+                  )}
+                  <Badge className="absolute left-3 top-3 shadow-sm">{book.category}</Badge>
+                </div>
+                <CardContent className="flex flex-1 flex-col pt-5">
+                  <h2 className="font-display text-xl font-semibold leading-snug">{book.title}</h2>
                   <p className="text-sm text-muted-foreground">{book.author}</p>
                   {book.description && (
                     <p className="mt-3 line-clamp-3 text-sm text-muted-foreground">{book.description}</p>
