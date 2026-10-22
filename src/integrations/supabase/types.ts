@@ -19,6 +19,7 @@ export type Database = {
           author: string
           available_copies: number
           category: string
+          cover_url: string | null
           created_at: string
           description: string | null
           id: string
@@ -30,6 +31,7 @@ export type Database = {
           author: string
           available_copies?: number
           category?: string
+          cover_url?: string | null
           created_at?: string
           description?: string | null
           id?: string
@@ -41,6 +43,7 @@ export type Database = {
           author?: string
           available_copies?: number
           category?: string
+          cover_url?: string | null
           created_at?: string
           description?: string | null
           id?: string
