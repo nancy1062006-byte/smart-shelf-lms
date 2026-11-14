@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { BookOpen, Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/lib/session";
+import { ALL_CATEGORIES, mergeBooksWithCatalog, type CatalogBook } from "@/data/booksCatalog";
 import { SiteNav } from "@/components/SiteNav";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,7 +35,7 @@ function BooksPage() {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("All");
 
-  const { data: books = [], isLoading } = useQuery({
+  const { data: rawBooks = [], isLoading } = useQuery({
     queryKey: ["books"],
     queryFn: async () => {
       const { data, error } = await supabase.from("books").select("*").order("title");
@@ -42,6 +43,8 @@ function BooksPage() {
       return data;
     },
   });
+
+  const books = useMemo(() => mergeBooksWithCatalog(rawBooks), [rawBooks]);
 
   const { data: myIssues = [] } = useQuery({
     queryKey: ["my-issues"],
@@ -58,7 +61,7 @@ function BooksPage() {
 
   const issuedBookIds = useMemo(() => new Set(myIssues.map((i) => i.book_id)), [myIssues]);
 
-  const categories = useMemo(() => ["All", ...Array.from(new Set(books.map((b) => b.category))).sort()], [books]);
+  const categories = useMemo(() => ["All", ...ALL_CATEGORIES], []);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -74,7 +77,27 @@ function BooksPage() {
   }, [books, query, category]);
 
   const issueMutation = useMutation({
-    mutationFn: async (bookId: string) => {
+    mutationFn: async (book: CatalogBook) => {
+      let bookId = book.id;
+      if (!bookId || bookId.startsWith("local-")) {
+        const { data: inserted, error: insertError } = await supabase
+          .from("books")
+          .insert({
+            title: book.title,
+            author: book.author,
+            category: book.category,
+            isbn: book.isbn || null,
+            description: book.description || null,
+            total_copies: book.total_copies,
+            available_copies: book.available_copies,
+            cover_url: book.cover_url || null,
+          })
+          .select("id")
+          .single();
+        if (!insertError && inserted?.id) {
+          bookId = inserted.id;
+        }
+      }
       const { error } = await supabase.rpc("issue_book", { _book_id: bookId });
       if (error) throw error;
     },
@@ -163,7 +186,7 @@ function BooksPage() {
                         <Button
                           className="w-full"
                           disabled={book.available_copies < 1 || issueMutation.isPending}
-                          onClick={() => issueMutation.mutate(book.id)}
+                          onClick={() => issueMutation.mutate(book)}
                         >
                           {book.available_copies > 0 ? "Issue book" : "All copies out"}
                         </Button>

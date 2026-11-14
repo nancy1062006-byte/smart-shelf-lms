@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { ALL_CATEGORIES, mergeBooksWithCatalog } from "@/data/booksCatalog";
 import { daysUntil, formatDate, useSession } from "@/lib/session";
 import { SiteNav } from "@/components/SiteNav";
 import { Button } from "@/components/ui/button";
@@ -53,7 +54,7 @@ function AdminPage() {
 
   const isLibrarian = role === "librarian";
 
-  const { data: books = [] } = useQuery({
+  const { data: rawBooks = [] } = useQuery({
     queryKey: ["books"],
     queryFn: async () => {
       const { data, error } = await supabase.from("books").select("*").order("title");
@@ -61,6 +62,8 @@ function AdminPage() {
       return data;
     },
   });
+
+  const books = useMemo(() => mergeBooksWithCatalog(rawBooks), [rawBooks]);
 
   const { data: issues = [] } = useQuery({
     queryKey: ["all-issues"],
@@ -124,6 +127,7 @@ function AdminPage() {
 
   const removeBook = useMutation({
     mutationFn: async (id: string) => {
+      if (id.startsWith("local-")) return;
       const { error } = await supabase.from("books").delete().eq("id", id);
       if (error) throw error;
     },
@@ -239,10 +243,16 @@ function AdminPage() {
                     <Label htmlFor="category">Category</Label>
                     <Input
                       id="category"
+                      list="category-options"
                       placeholder="e.g. Computer Science"
                       value={form.category}
                       onChange={(e) => setForm({ ...form, category: e.target.value })}
                     />
+                    <datalist id="category-options">
+                      {ALL_CATEGORIES.map((cat) => (
+                        <option key={cat} value={cat} />
+                      ))}
+                    </datalist>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="isbn">ISBN</Label>
