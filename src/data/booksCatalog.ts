@@ -376,7 +376,7 @@ export const DEFAULT_BOOKS: CatalogBook[] = [
     "description": "A psychiatrist experiences life in Nazi death camps and illuminates psychotherapeutic principles.",
     "total_copies": 3,
     "available_copies": 3,
-    "cover_url": null
+    "cover_url": "https://covers.openlibrary.org/b/isbn/9780807014295-M.jpg"
   },
   {
     "title": "The Man Who Mistook His Wife for a Hat",
@@ -386,7 +386,7 @@ export const DEFAULT_BOOKS: CatalogBook[] = [
     "description": "Clinical tales of patients struggling with perceptual and intellectual neurological disorders.",
     "total_copies": 3,
     "available_copies": 3,
-    "cover_url": null
+    "cover_url": "https://books.google.com/books/content?vid=isbn9780563406983&printsec=frontcover&img=1&zoom=1"
   },
   {
     "title": "Influence: The Psychology of Persuasion",
@@ -396,7 +396,7 @@ export const DEFAULT_BOOKS: CatalogBook[] = [
     "description": "Foundational work explaining why people say yes and how to apply these understandings.",
     "total_copies": 4,
     "available_copies": 4,
-    "cover_url": null
+    "cover_url": "https://covers.openlibrary.org/b/isbn/9780061241895-M.jpg"
   },
   {
     "title": "Quiet: The Power of Introverts",
@@ -406,7 +406,7 @@ export const DEFAULT_BOOKS: CatalogBook[] = [
     "description": "How society undervalues introverts and the tremendous benefits they bring to a noisy world.",
     "total_copies": 3,
     "available_copies": 3,
-    "cover_url": null
+    "cover_url": "https://covers.openlibrary.org/b/isbn/9780307352156-M.jpg"
   },
   {
     "title": "Molecular Biology of the Cell",
@@ -416,7 +416,7 @@ export const DEFAULT_BOOKS: CatalogBook[] = [
     "description": "The definitive text in cell biology covering structure, function, and genetics.",
     "total_copies": 3,
     "available_copies": 3,
-    "cover_url": null
+    "cover_url": "https://covers.openlibrary.org/b/isbn/9780815344322-M.jpg"
   },
   {
     "title": "The Origin of Species",
@@ -426,7 +426,7 @@ export const DEFAULT_BOOKS: CatalogBook[] = [
     "description": "The foundational work of evolutionary biology introducing the principle of natural selection.",
     "total_copies": 4,
     "available_copies": 4,
-    "cover_url": null
+    "cover_url": "https://covers.openlibrary.org/b/isbn/9780451529060-M.jpg"
   },
   {
     "title": "The Immortal Life of Henrietta Lacks",
@@ -436,7 +436,7 @@ export const DEFAULT_BOOKS: CatalogBook[] = [
     "description": "The story of HeLa cells and their profound impact on modern medicine and bioethics.",
     "total_copies": 3,
     "available_copies": 3,
-    "cover_url": null
+    "cover_url": "https://covers.openlibrary.org/b/isbn/9781400052189-M.jpg"
   },
   {
     "title": "Silent Spring",
@@ -446,7 +446,7 @@ export const DEFAULT_BOOKS: CatalogBook[] = [
     "description": "The landmark environmental science text exposing the hazards of indiscriminate pesticide use.",
     "total_copies": 2,
     "available_copies": 2,
-    "cover_url": null
+    "cover_url": "https://covers.openlibrary.org/b/isbn/9780618249060-M.jpg"
   },
   {
     "title": "Cosmos",
@@ -456,7 +456,7 @@ export const DEFAULT_BOOKS: CatalogBook[] = [
     "description": "The sweeping story of cosmic evolution, science, astronomy, and human civilization.",
     "total_copies": 4,
     "available_copies": 4,
-    "cover_url": null
+    "cover_url": "https://covers.openlibrary.org/b/isbn/9780345331359-M.jpg"
   },
   {
     "title": "A Short History of Nearly Everything",
@@ -466,7 +466,7 @@ export const DEFAULT_BOOKS: CatalogBook[] = [
     "description": "An entertaining and accessible quest to understand how the universe and life came to be.",
     "total_copies": 3,
     "available_copies": 3,
-    "cover_url": null
+    "cover_url": "https://covers.openlibrary.org/b/isbn/9780767908184-M.jpg"
   },
   {
     "title": "The Structure of Scientific Revolutions",
@@ -476,7 +476,7 @@ export const DEFAULT_BOOKS: CatalogBook[] = [
     "description": "A landmark study on paradigm shifts and how true scientific breakthroughs occur.",
     "total_copies": 3,
     "available_copies": 3,
-    "cover_url": null
+    "cover_url": "https://covers.openlibrary.org/b/isbn/9780262510882-M.jpg"
   },
   {
     "title": "Chemistry: The Central Science",
@@ -486,7 +486,7 @@ export const DEFAULT_BOOKS: CatalogBook[] = [
     "description": "Comprehensive foundation of chemical principles, reactions, and laboratory applications.",
     "total_copies": 4,
     "available_copies": 4,
-    "cover_url": null
+    "cover_url": "https://covers.openlibrary.org/b/isbn/9780134414232-M.jpg"
   },
   {
     "title": "Inorganic Chemistry",
@@ -496,7 +496,7 @@ export const DEFAULT_BOOKS: CatalogBook[] = [
     "description": "Thorough introduction to bonding theories, coordination chemistry, and organometallics.",
     "total_copies": 3,
     "available_copies": 3,
-    "cover_url": null
+    "cover_url": "https://covers.openlibrary.org/b/isbn/9780321811059-M.jpg"
   },
   {
     "title": "Physical Chemistry",
@@ -506,7 +506,7 @@ export const DEFAULT_BOOKS: CatalogBook[] = [
     "description": "Core principles of thermodynamics, quantum mechanics, and chemical reaction kinetics.",
     "total_copies": 3,
     "available_copies": 3,
-    "cover_url": null
+    "cover_url": "https://covers.openlibrary.org/b/isbn/9780198769866-M.jpg"
   },
   {
     "title": "The Disappearing Spoon",
@@ -516,7 +516,7 @@ export const DEFAULT_BOOKS: CatalogBook[] = [
     "description": "Fascinating stories of history, human ambition, and elements across the periodic table.",
     "total_copies": 3,
     "available_copies": 3,
-    "cover_url": null
+    "cover_url": "https://covers.openlibrary.org/b/isbn/9780316051644-M.jpg"
   },
   {
     "title": "Deep Work",
@@ -526,7 +526,7 @@ export const DEFAULT_BOOKS: CatalogBook[] = [
     "description": "Rules for focused success in a distracted world and cultivating deep, uninterrupted focus.",
     "total_copies": 4,
     "available_copies": 4,
-    "cover_url": null
+    "cover_url": "https://covers.openlibrary.org/b/isbn/9781455586691-M.jpg"
   },
   {
     "title": "Mindset: The New Psychology of Success",
@@ -536,7 +536,7 @@ export const DEFAULT_BOOKS: CatalogBook[] = [
     "description": "How developing a growth mindset unlocks resilience, achievement, and lifelong learning.",
     "total_copies": 3,
     "available_copies": 3,
-    "cover_url": null
+    "cover_url": "https://covers.openlibrary.org/b/isbn/9780345472328-M.jpg"
   },
   {
     "title": "The Subtle Art of Not Giving a F*ck",
@@ -546,7 +546,7 @@ export const DEFAULT_BOOKS: CatalogBook[] = [
     "description": "A counterintuitive guide to living a good life by choosing what problems are worth having.",
     "total_copies": 3,
     "available_copies": 3,
-    "cover_url": null
+    "cover_url": "https://covers.openlibrary.org/b/isbn/9780062457714-M.jpg"
   },
   {
     "title": "Grit: The Power of Passion and Perseverance",
@@ -556,7 +556,7 @@ export const DEFAULT_BOOKS: CatalogBook[] = [
     "description": "Why effort and persistence matter more than raw talent in reaching long-term goals.",
     "total_copies": 3,
     "available_copies": 3,
-    "cover_url": null
+    "cover_url": "https://covers.openlibrary.org/b/isbn/9781501111105-M.jpg"
   },
   {
     "title": "Freakonomics",
@@ -566,7 +566,7 @@ export const DEFAULT_BOOKS: CatalogBook[] = [
     "description": "A rogue economist explores the hidden side of everyday phenomena using economic data.",
     "total_copies": 4,
     "available_copies": 4,
-    "cover_url": null
+    "cover_url": "https://covers.openlibrary.org/b/isbn/9780060731335-M.jpg"
   },
   {
     "title": "Capital in the Twenty-First Century",
@@ -576,7 +576,7 @@ export const DEFAULT_BOOKS: CatalogBook[] = [
     "description": "A groundbreaking empirical analysis of historical wealth accumulation and inequality.",
     "total_copies": 3,
     "available_copies": 3,
-    "cover_url": null
+    "cover_url": "https://covers.openlibrary.org/b/isbn/9780674430006-M.jpg"
   },
   {
     "title": "Basic Economics",
@@ -586,7 +586,7 @@ export const DEFAULT_BOOKS: CatalogBook[] = [
     "description": "A clear, common-sense explanation of economic principles without mathematical jargon.",
     "total_copies": 3,
     "available_copies": 3,
-    "cover_url": null
+    "cover_url": "https://covers.openlibrary.org/b/isbn/9780465060733-M.jpg"
   },
   {
     "title": "Guns, Germs, and Steel",
@@ -596,7 +596,7 @@ export const DEFAULT_BOOKS: CatalogBook[] = [
     "description": "The fates of human societies shaped by geographic and environmental advantages.",
     "total_copies": 4,
     "available_copies": 4,
-    "cover_url": null
+    "cover_url": "https://covers.openlibrary.org/b/isbn/9780393317558-M.jpg"
   },
   {
     "title": "The Silk Roads: A New History of the World",
@@ -606,7 +606,7 @@ export const DEFAULT_BOOKS: CatalogBook[] = [
     "description": "An expansive reassessment of world history centred on the great trade arteries of Eurasia.",
     "total_copies": 3,
     "available_copies": 3,
-    "cover_url": null
+    "cover_url": "https://covers.openlibrary.org/b/isbn/9781101912379-M.jpg"
   },
   {
     "title": "Postwar: A History of Europe Since 1945",
@@ -616,7 +616,7 @@ export const DEFAULT_BOOKS: CatalogBook[] = [
     "description": "Magisterial history of Europe's rebuilding and identity after the devastation of World War II.",
     "total_copies": 3,
     "available_copies": 3,
-    "cover_url": null
+    "cover_url": "https://covers.openlibrary.org/b/isbn/9780143037750-M.jpg"
   },
   {
     "title": "1491: New Revelations of the Americas Before Columbus",
@@ -626,7 +626,7 @@ export const DEFAULT_BOOKS: CatalogBook[] = [
     "description": "Compelling archaeological evidence of thriving, sophisticated pre-Columbian societies.",
     "total_copies": 3,
     "available_copies": 3,
-    "cover_url": null
+    "cover_url": "https://covers.openlibrary.org/b/isbn/9781400032051-M.jpg"
   },
   {
     "title": "Good to Great",
@@ -636,7 +636,7 @@ export const DEFAULT_BOOKS: CatalogBook[] = [
     "description": "Why some companies make the leap to enduring greatness and others do not.",
     "total_copies": 4,
     "available_copies": 4,
-    "cover_url": null
+    "cover_url": "https://covers.openlibrary.org/b/isbn/9780066620992-M.jpg"
   },
   {
     "title": "The Lean Startup",
@@ -646,7 +646,7 @@ export const DEFAULT_BOOKS: CatalogBook[] = [
     "description": "How modern entrepreneurs use validated learning and rapid iteration to build products.",
     "total_copies": 3,
     "available_copies": 3,
-    "cover_url": null
+    "cover_url": "https://covers.openlibrary.org/b/isbn/9780307887894-M.jpg"
   },
   {
     "title": "The Hard Thing About Hard Things",
@@ -656,7 +656,7 @@ export const DEFAULT_BOOKS: CatalogBook[] = [
     "description": "Practical insights and battle-tested advice for leading teams through crisis and uncertainty.",
     "total_copies": 3,
     "available_copies": 3,
-    "cover_url": null
+    "cover_url": "https://covers.openlibrary.org/b/isbn/9780062273208-M.jpg"
   },
   {
     "title": "Zero to One",
@@ -666,7 +666,7 @@ export const DEFAULT_BOOKS: CatalogBook[] = [
     "description": "How innovators create completely new paradigms rather than copying existing formulas.",
     "total_copies": 4,
     "available_copies": 4,
-    "cover_url": null
+    "cover_url": "https://covers.openlibrary.org/b/isbn/9780804139298-M.jpg"
   },
   {
     "title": "Calculus: Early Transcendentals",
@@ -676,7 +676,7 @@ export const DEFAULT_BOOKS: CatalogBook[] = [
     "description": "The quintessential calculus textbook combining mathematical rigour with applications.",
     "total_copies": 4,
     "available_copies": 4,
-    "cover_url": null
+    "cover_url": "https://covers.openlibrary.org/b/isbn/9781285741550-M.jpg"
   },
   {
     "title": "Higher Engineering Mathematics",
@@ -696,7 +696,7 @@ export const DEFAULT_BOOKS: CatalogBook[] = [
     "description": "The classic 'Baby Rudin' introduction to real analysis, topology, and metric spaces.",
     "total_copies": 2,
     "available_copies": 2,
-    "cover_url": null
+    "cover_url": "https://covers.openlibrary.org/b/isbn/9780070542358-M.jpg"
   },
   {
     "title": "The Feynman Lectures on Physics",
@@ -706,7 +706,7 @@ export const DEFAULT_BOOKS: CatalogBook[] = [
     "description": "The legendary physics lectures presenting mechanics, radiation, and quantum phenomena.",
     "total_copies": 4,
     "available_copies": 4,
-    "cover_url": null
+    "cover_url": "https://covers.openlibrary.org/b/isbn/9780465023820-M.jpg"
   },
   {
     "title": "Concepts of Physics",
@@ -726,7 +726,7 @@ export const DEFAULT_BOOKS: CatalogBook[] = [
     "description": "Renowned undergraduate text on electrostatics, magnetostatics, and Maxwell's equations.",
     "total_copies": 3,
     "available_copies": 3,
-    "cover_url": null
+    "cover_url": "https://covers.openlibrary.org/b/isbn/9781108420419-M.jpg"
   }
 ];
 

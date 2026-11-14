@@ -150,18 +150,34 @@ function BooksPage() {
             {filtered.map((book) => (
               <Card key={book.id} className="surface-paper flex flex-col overflow-hidden">
                 <div className="relative h-56 w-full overflow-hidden border-b border-border bg-secondary/60">
-                  {book.cover_url ? (
+                  {book.cover_url || book.isbn ? (
                     <img
-                      src={book.cover_url}
+                      src={
+                        book.cover_url ||
+                        (book.isbn ? `https://covers.openlibrary.org/b/isbn/${book.isbn}-M.jpg` : undefined)
+                      }
                       alt={`Cover of ${book.title}`}
                       loading="lazy"
-                      className="h-full w-full object-cover"
+                      className="h-full w-full object-cover transition-transform duration-300 hover:scale-105"
+                      onError={(e) => {
+                        const target = e.currentTarget;
+                        if (book.isbn && !target.dataset.triedGoogle) {
+                          target.dataset.triedGoogle = "true";
+                          target.src = `https://books.google.com/books/content?vid=isbn${book.isbn}&printsec=frontcover&img=1&zoom=1`;
+                        } else {
+                          target.style.display = "none";
+                          const fallback = target.nextElementSibling as HTMLElement;
+                          if (fallback) fallback.style.display = "flex";
+                        }
+                      }}
                     />
-                  ) : (
-                    <div className="flex h-full items-center justify-center">
-                      <BookOpen className="size-10 text-muted-foreground/50" />
-                    </div>
-                  )}
+                  ) : null}
+                  <div
+                    className="flex h-full w-full items-center justify-center bg-secondary/40"
+                    style={{ display: book.cover_url || book.isbn ? "none" : "flex" }}
+                  >
+                    <BookOpen className="size-10 text-muted-foreground/50" />
+                  </div>
                   <Badge className="absolute left-3 top-3 shadow-sm">{book.category}</Badge>
                 </div>
                 <CardContent className="flex flex-1 flex-col pt-5">

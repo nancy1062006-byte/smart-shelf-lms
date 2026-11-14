@@ -21,10 +21,14 @@
 
 body {
     margin: 0;
-    background: var(--ss-paper);
+    background:
+        radial-gradient(ellipse at 50% 20%, rgba(247, 249, 252, 0.90), rgba(247, 249, 252, 0.96)),
+        url("https://images.unsplash.com/photo-1521587760476-6c12a4b040da?auto=format&fit=crop&w=2400&q=80") no-repeat center center fixed;
+    background-size: cover;
     color: var(--ss-ink);
     font-family: "DM Sans", "Segoe UI", system-ui, sans-serif;
     line-height: 1.55;
+    min-height: 100vh;
 }
 
 h1, h2, h3, .brand {

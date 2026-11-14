@@ -147,6 +147,21 @@
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
+    min-height: 100vh;
+    background-image:
+      radial-gradient(ellipse at 50% 20%, oklch(0.985 0.008 300 / 0.88), oklch(0.975 0.012 300 / 0.94)),
+      url("https://images.unsplash.com/photo-1521587760476-6c12a4b040da?auto=format&fit=crop&w=2400&q=80");
+    background-attachment: fixed;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+
+  .dark body,
+  body:is(.dark *) {
+    background-image:
+      radial-gradient(ellipse at 50% 20%, oklch(0.18 0.045 300 / 0.90), oklch(0.14 0.04 300 / 0.96)),
+      url("https://images.unsplash.com/photo-1521587760476-6c12a4b040da?auto=format&fit=crop&w=2400&q=80");
   }
 
   h1,
@@ -159,7 +174,9 @@
 }
 
 @utility surface-paper {
-  background-color: var(--color-card);
+  background-color: color-mix(in oklch, var(--color-card) 94%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border: 1px solid var(--color-border);
   box-shadow: var(--shadow-shelf);
 }
