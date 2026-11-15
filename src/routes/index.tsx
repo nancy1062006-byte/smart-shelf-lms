@@ -64,13 +64,25 @@ function Home() {
       <SiteNav />
 
       <main>
-        <section className="border-b border-border bg-secondary/40">
-          <div className="mx-auto grid max-w-6xl gap-10 px-4 py-20 md:grid-cols-[1.15fr_1fr] md:items-center">
+        <section className="relative overflow-hidden border-b border-border">
+          {/* Subtle blurred library bookshelf background with balanced overlay */}
+          <div className="absolute inset-0 pointer-events-none -z-10 overflow-hidden">
+            <img
+              src="https://images.unsplash.com/photo-1521587760476-6c12a4b040da?auto=format&fit=crop&w=2400&q=85"
+              alt="Library bookshelf"
+              className="h-full w-full object-cover scale-105 filter blur-[2px]"
+            />
+            {/* Balanced multi-stop overlay for crisp readability */}
+            <div className="absolute inset-0 bg-gradient-to-r from-background/95 via-background/90 to-background/80 dark:from-background/96 dark:via-background/92 dark:to-background/85" />
+            <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-background/50" />
+          </div>
+
+          <div className="relative mx-auto grid max-w-6xl gap-10 px-4 py-20 md:grid-cols-[1.15fr_1fr] md:items-center">
             <div>
-              <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-xs font-medium uppercase tracking-widest text-muted-foreground">
+              <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-border bg-card/85 backdrop-blur-sm px-3 py-1 text-xs font-medium uppercase tracking-widest text-muted-foreground shadow-xs">
                 <BookOpen className="size-3.5" /> College Library System
               </p>
-              <h1 className="text-4xl font-semibold leading-tight md:text-6xl">
+              <h1 className="text-4xl font-semibold leading-tight md:text-6xl text-foreground">
                 The whole library, <span className="text-gradient-shelf">on one shelf.</span>
               </h1>
               <p className="mt-5 max-w-xl text-lg text-muted-foreground">
@@ -81,13 +93,13 @@ function Home() {
                 <Button asChild size="lg">
                   <Link to="/books">Browse the catalog</Link>
                 </Button>
-                <Button asChild size="lg" variant="outline">
+                <Button asChild size="lg" variant="outline" className="bg-card/75 backdrop-blur-sm hover:bg-card">
                   <Link to="/auth">Create an account</Link>
                 </Button>
               </div>
             </div>
 
-            <div className="surface-paper rounded-xl p-6">
+            <div className="surface-paper rounded-xl p-6 bg-card/90 backdrop-blur-md shadow-xl border-border/80">
               <p className="font-display text-sm uppercase tracking-widest text-muted-foreground">Shelf at a glance</p>
               <dl className="mt-6 grid grid-cols-3 gap-4 text-center">
                 {[
@@ -95,7 +107,7 @@ function Home() {
                   { label: "Copies", value: stats?.copies ?? "—" },
                   { label: "Categories", value: stats?.categories ?? "—" },
                 ].map((s) => (
-                  <div key={s.label} className="rounded-lg bg-secondary/60 py-5">
+                  <div key={s.label} className="rounded-lg bg-secondary/80 backdrop-blur-xs py-5 border border-border/50">
                     <dt className="text-xs uppercase tracking-wide text-muted-foreground">{s.label}</dt>
                     <dd className="font-display text-3xl font-semibold">{s.value}</dd>
                   </div>

@@ -58,7 +58,10 @@ h1, h2, h3, .brand {
 
 /* ---------- Hero ---------- */
 .hero {
-    background: linear-gradient(160deg, var(--ss-navy) 0%, var(--ss-navy-deep) 100%);
+    background: 
+        linear-gradient(160deg, rgba(15, 37, 71, 0.88) 0%, rgba(8, 23, 41, 0.94) 100%),
+        url("https://images.unsplash.com/photo-1521587760476-6c12a4b040da?auto=format&fit=crop&w=2000&q=80") no-repeat center center;
+    background-size: cover;
     color: #fff;
     padding: 4.5rem 0;
 }
