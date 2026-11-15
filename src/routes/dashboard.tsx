@@ -3,11 +3,13 @@ import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { daysUntil, formatDate, useSession } from "@/lib/session";
+import { fetchMergedIssues, type IssueRecord } from "@/lib/circulationStorage";
 import { SiteNav } from "@/components/SiteNav";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { BookOpen } from "lucide-react";
 
 export const Route = createFileRoute("/dashboard")({
   head: () => ({
@@ -29,15 +31,6 @@ export const Route = createFileRoute("/dashboard")({
   }),
   component: DashboardPage,
 });
-
-type IssueRow = {
-  id: string;
-  issued_at: string;
-  due_date: string;
-  returned_at: string | null;
-  status: string;
-  books: { title: string; author: string; category: string } | null;
-};
 
 function DashboardPage() {
   const { user, role, fullName, loading } = useSession();
@@ -61,17 +54,11 @@ function DashboardPage() {
     },
   });
 
-  const { data: issues = [], isLoading } = useQuery({
+  const { data: issues = [], isLoading } = useQuery<IssueRecord[]>({
     queryKey: ["my-issues", user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("issued_books")
-        .select("id, issued_at, due_date, returned_at, status, books(title, author, category)")
-        .eq("user_id", user!.id)
-        .order("issued_at", { ascending: false });
-      if (error) throw error;
-      return data as unknown as IssueRow[];
+      return await fetchMergedIssues(user!.id);
     },
   });
 
@@ -170,13 +157,38 @@ function DashboardPage() {
                 <TableBody>
                   {active.map((row) => {
                     const left = daysUntil(row.due_date);
+                    const bookTitle = row.books?.title || "Library Book";
+                    const bookAuthor = row.books?.author || "Catalog Title";
+                    const category = row.books?.category || "General";
+                    const coverUrl = row.books?.cover_url;
+
                     return (
                       <TableRow key={row.id}>
                         <TableCell>
-                          <p className="font-medium">{row.books?.title}</p>
-                          <p className="text-xs text-muted-foreground">{row.books?.author}</p>
+                          <div className="flex items-center gap-3">
+                            {coverUrl ? (
+                              <img
+                                src={coverUrl}
+                                alt={bookTitle}
+                                className="h-12 w-9 rounded object-cover shadow-sm bg-muted flex-shrink-0"
+                                onError={(e) => {
+                                  (e.currentTarget as HTMLImageElement).style.display = "none";
+                                }}
+                              />
+                            ) : (
+                              <div className="flex h-12 w-9 items-center justify-center rounded bg-primary/10 text-primary flex-shrink-0">
+                                <BookOpen className="size-4" />
+                              </div>
+                            )}
+                            <div>
+                              <p className="font-medium">{bookTitle}</p>
+                              <p className="text-xs text-muted-foreground">{bookAuthor}</p>
+                            </div>
+                          </div>
                         </TableCell>
-                        <TableCell>{row.books?.category}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{category}</Badge>
+                        </TableCell>
                         <TableCell>{formatDate(row.issued_at)}</TableCell>
                         <TableCell>{formatDate(row.due_date)}</TableCell>
                         <TableCell>
@@ -203,6 +215,7 @@ function DashboardPage() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Book</TableHead>
+                    <TableHead>Category</TableHead>
                     <TableHead>Issued</TableHead>
                     <TableHead>Due</TableHead>
                     <TableHead>Returned</TableHead>
@@ -211,7 +224,27 @@ function DashboardPage() {
                 <TableBody>
                   {returned.map((row) => (
                     <TableRow key={row.id}>
-                      <TableCell className="font-medium">{row.books?.title}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          {row.books?.cover_url && (
+                            <img
+                              src={row.books.cover_url}
+                              alt={row.books.title}
+                              className="h-10 w-7 rounded object-cover shadow-xs bg-muted flex-shrink-0"
+                              onError={(e) => {
+                                (e.currentTarget as HTMLImageElement).style.display = "none";
+                              }}
+                            />
+                          )}
+                          <div>
+                            <p className="font-medium">{row.books?.title || "Library Book"}</p>
+                            <p className="text-xs text-muted-foreground">{row.books?.author || "Catalog Title"}</p>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline">{row.books?.category || "General"}</Badge>
+                      </TableCell>
                       <TableCell>{formatDate(row.issued_at)}</TableCell>
                       <TableCell>{formatDate(row.due_date)}</TableCell>
                       <TableCell>{formatDate(row.returned_at)}</TableCell>

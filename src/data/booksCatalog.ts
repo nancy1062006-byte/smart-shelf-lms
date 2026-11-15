@@ -730,33 +730,59 @@ export const DEFAULT_BOOKS: CatalogBook[] = [
   }
 ];
 
+function getLocalOverrides(): Record<string, { available: number; total: number }> {
+  if (typeof window === "undefined") return {};
+  try {
+    const raw = localStorage.getItem("smartshelf_inventory_overrides_v2");
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
 /**
  * Merges remote database books with the local catalog to ensure every one of the 12
  * categories always has at least 5 books displayed while keeping existing remote records intact.
  */
 export function mergeBooksWithCatalog(remoteBooks: any[] = []): CatalogBook[] {
+  const overrides = getLocalOverrides();
+  let baseList: CatalogBook[] = [];
+
   if (!remoteBooks || remoteBooks.length === 0) {
-    return DEFAULT_BOOKS;
-  }
+    baseList = [...DEFAULT_BOOKS];
+  } else {
+    const existingTitles = new Set(remoteBooks.map((b) => b.title.trim().toLowerCase()));
+    const existingIsbns = new Set(remoteBooks.filter((b) => b.isbn).map((b) => b.isbn.trim()));
 
-  const existingTitles = new Set(remoteBooks.map((b) => b.title.trim().toLowerCase()));
-  const existingIsbns = new Set(remoteBooks.filter((b) => b.isbn).map((b) => b.isbn.trim()));
+    const merged = [...remoteBooks];
 
-  const merged = [...remoteBooks];
+    for (const book of DEFAULT_BOOKS) {
+      const titleKey = book.title.trim().toLowerCase();
+      const isbnKey = book.isbn ? book.isbn.trim() : null;
 
-  for (const book of DEFAULT_BOOKS) {
-    const titleKey = book.title.trim().toLowerCase();
-    const isbnKey = book.isbn ? book.isbn.trim() : null;
-
-    if (!existingTitles.has(titleKey) && (!isbnKey || !existingIsbns.has(isbnKey))) {
-      merged.push({
-        ...book,
-        id: book.id || `local-${book.isbn || Math.random().toString(36).slice(2)}`,
-      });
-      existingTitles.add(titleKey);
-      if (isbnKey) existingIsbns.add(isbnKey);
+      if (!existingTitles.has(titleKey) && (!isbnKey || !existingIsbns.has(isbnKey))) {
+        merged.push({
+          ...book,
+          id: book.id || `local-${book.isbn || Math.random().toString(36).slice(2)}`,
+        });
+        existingTitles.add(titleKey);
+        if (isbnKey) existingIsbns.add(isbnKey);
+      }
     }
+    baseList = merged;
   }
 
-  return merged.sort((a, b) => a.title.localeCompare(b.title));
+  return baseList
+    .map((b) => {
+      const cleanIsbn = b.isbn ? b.isbn.replace(/[\s-]/g, "") : "";
+      const ov = overrides[b.id || ""] || overrides[cleanIsbn] || overrides[b.title];
+      if (ov && typeof ov.available === "number") {
+        return {
+          ...b,
+          available_copies: Math.min(b.total_copies, Math.max(0, ov.available)),
+        };
+      }
+      return b;
+    })
+    .sort((a, b) => a.title.localeCompare(b.title));
 }

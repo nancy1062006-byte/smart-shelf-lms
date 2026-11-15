@@ -2,13 +2,14 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 import { daysUntil, formatDate, useSession } from "@/lib/session";
+import { fetchMergedIssues, executeReturnBook, type IssueRecord } from "@/lib/circulationStorage";
 import { SiteNav } from "@/components/SiteNav";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { BookOpen } from "lucide-react";
 
 export const Route = createFileRoute("/circulation")({
   head: () => ({
@@ -27,15 +28,6 @@ export const Route = createFileRoute("/circulation")({
   component: CirculationPage,
 });
 
-type IssueRow = {
-  id: string;
-  issued_at: string;
-  due_date: string;
-  returned_at: string | null;
-  status: string;
-  books: { title: string; author: string; category: string } | null;
-};
-
 function CirculationPage() {
   const { user, loading } = useSession();
   const navigate = useNavigate();
@@ -45,24 +37,17 @@ function CirculationPage() {
     if (!loading && !user) navigate({ to: "/auth", replace: true });
   }, [loading, user, navigate]);
 
-  const { data: issues = [], isLoading } = useQuery({
+  const { data: issues = [], isLoading } = useQuery<IssueRecord[]>({
     queryKey: ["my-issues", user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("issued_books")
-        .select("id, issued_at, due_date, returned_at, status, books(title, author, category)")
-        .eq("user_id", user!.id)
-        .order("issued_at", { ascending: false });
-      if (error) throw error;
-      return data as unknown as IssueRow[];
+      return await fetchMergedIssues(user!.id);
     },
   });
 
   const returnMutation = useMutation({
-    mutationFn: async (issueId: string) => {
-      const { error } = await supabase.rpc("return_book", { _issue_id: issueId });
-      if (error) throw error;
+    mutationFn: async ({ issueId, bookId }: { issueId: string; bookId?: string }) => {
+      await executeReturnBook(issueId, bookId);
     },
     onSuccess: () => {
       toast.success("Book returned. Thank you!");
@@ -70,7 +55,7 @@ function CirculationPage() {
       queryClient.invalidateQueries({ queryKey: ["books"] });
       queryClient.invalidateQueries({ queryKey: ["all-issues"] });
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(e.message || "Failed to return book"),
   });
 
   const active = issues.filter((i) => i.status === "issued");
@@ -118,6 +103,7 @@ function CirculationPage() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Book</TableHead>
+                    <TableHead>Category</TableHead>
                     <TableHead>Issued</TableHead>
                     <TableHead>Due</TableHead>
                     <TableHead>Status</TableHead>
@@ -127,11 +113,37 @@ function CirculationPage() {
                 <TableBody>
                   {active.map((row) => {
                     const left = daysUntil(row.due_date);
+                    const bookTitle = row.books?.title || "Library Book";
+                    const bookAuthor = row.books?.author || "Catalog Title";
+                    const category = row.books?.category || "General";
+                    const coverUrl = row.books?.cover_url;
+
                     return (
                       <TableRow key={row.id}>
                         <TableCell>
-                          <p className="font-medium">{row.books?.title}</p>
-                          <p className="text-xs text-muted-foreground">{row.books?.author}</p>
+                          <div className="flex items-center gap-3">
+                            {coverUrl ? (
+                              <img
+                                src={coverUrl}
+                                alt={bookTitle}
+                                className="h-12 w-9 rounded object-cover shadow-sm bg-muted flex-shrink-0"
+                                onError={(e) => {
+                                  (e.currentTarget as HTMLImageElement).style.display = "none";
+                                }}
+                              />
+                            ) : (
+                              <div className="flex h-12 w-9 items-center justify-center rounded bg-primary/10 text-primary flex-shrink-0">
+                                <BookOpen className="size-4" />
+                              </div>
+                            )}
+                            <div>
+                              <p className="font-medium">{bookTitle}</p>
+                              <p className="text-xs text-muted-foreground">{bookAuthor}</p>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{category}</Badge>
                         </TableCell>
                         <TableCell>{formatDate(row.issued_at)}</TableCell>
                         <TableCell>{formatDate(row.due_date)}</TableCell>
@@ -147,7 +159,7 @@ function CirculationPage() {
                             size="sm"
                             variant="outline"
                             disabled={returnMutation.isPending}
-                            onClick={() => returnMutation.mutate(row.id)}
+                            onClick={() => returnMutation.mutate({ issueId: row.id, bookId: row.book_id })}
                           >
                             Return
                           </Button>
@@ -169,6 +181,7 @@ function CirculationPage() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Book</TableHead>
+                    <TableHead>Category</TableHead>
                     <TableHead>Issued</TableHead>
                     <TableHead>Due</TableHead>
                     <TableHead>Returned</TableHead>
@@ -177,7 +190,27 @@ function CirculationPage() {
                 <TableBody>
                   {history.map((row) => (
                     <TableRow key={row.id}>
-                      <TableCell className="font-medium">{row.books?.title}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          {row.books?.cover_url && (
+                            <img
+                              src={row.books.cover_url}
+                              alt={row.books.title}
+                              className="h-10 w-7 rounded object-cover shadow-xs bg-muted flex-shrink-0"
+                              onError={(e) => {
+                                (e.currentTarget as HTMLImageElement).style.display = "none";
+                              }}
+                            />
+                          )}
+                          <div>
+                            <p className="font-medium">{row.books?.title || "Library Book"}</p>
+                            <p className="text-xs text-muted-foreground">{row.books?.author || "Catalog Title"}</p>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline">{row.books?.category || "General"}</Badge>
+                      </TableCell>
                       <TableCell>{formatDate(row.issued_at)}</TableCell>
                       <TableCell>{formatDate(row.due_date)}</TableCell>
                       <TableCell>{formatDate(row.returned_at)}</TableCell>

@@ -64,56 +64,59 @@ function Home() {
       <SiteNav />
 
       <main>
-        <section className="relative overflow-hidden border-b border-border">
-          {/* Subtle blurred library bookshelf background with balanced overlay */}
+        <section className="relative overflow-hidden border-b border-border shadow-2xl">
+          {/* Crisp, prominent bookshelf background with balanced aesthetic library overlay */}
           <div className="absolute inset-0 pointer-events-none -z-10 overflow-hidden">
             <img
-              src="https://images.unsplash.com/photo-1521587760476-6c12a4b040da?auto=format&fit=crop&w=2400&q=85"
-              alt="Library bookshelf"
-              className="h-full w-full object-cover scale-105 filter blur-[2px]"
+              src="https://images.unsplash.com/photo-1521587760476-6c12a4b040da?auto=format&fit=crop&w=2400&q=90"
+              alt="Aesthetic Library Bookshelf"
+              className="h-full w-full object-cover brightness-90 contrast-105"
             />
-            {/* Balanced multi-stop overlay for crisp readability */}
-            <div className="absolute inset-0 bg-gradient-to-r from-background/95 via-background/90 to-background/80 dark:from-background/96 dark:via-background/92 dark:to-background/85" />
-            <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-background/50" />
+            {/* Rich balanced overlay: dark library vignette that keeps text 100% readable while the bookshelf is clearly visible */}
+            <div className="absolute inset-0 bg-gradient-to-r from-slate-950/85 via-slate-900/65 to-slate-950/80" />
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-transparent to-slate-950/40" />
           </div>
 
-          <div className="relative mx-auto grid max-w-6xl gap-10 px-4 py-20 md:grid-cols-[1.15fr_1fr] md:items-center">
+          <div className="relative mx-auto grid max-w-6xl gap-10 px-4 py-24 md:grid-cols-[1.15fr_1fr] md:items-center">
             <div>
-              <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-border bg-card/85 backdrop-blur-sm px-3 py-1 text-xs font-medium uppercase tracking-widest text-muted-foreground shadow-xs">
-                <BookOpen className="size-3.5" /> College Library System
+              <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-purple-400/30 bg-purple-950/60 backdrop-blur-md px-3.5 py-1 text-xs font-semibold uppercase tracking-widest text-purple-200 shadow-md">
+                <BookOpen className="size-3.5 text-purple-300" /> College Library System
               </p>
-              <h1 className="text-4xl font-semibold leading-tight md:text-6xl text-foreground">
-                The whole library, <span className="text-gradient-shelf">on one shelf.</span>
+              <h1 className="text-4xl font-semibold leading-tight md:text-6xl text-white drop-shadow-sm">
+                The whole library, <span className="text-purple-300 font-bold">on one shelf.</span>
               </h1>
-              <p className="mt-5 max-w-xl text-lg text-muted-foreground">
+              <p className="mt-5 max-w-xl text-lg text-slate-200 leading-relaxed drop-shadow-xs">
                 Smart-Shelf gives students a searchable catalog with one-click borrowing, and gives librarians full
                 control over inventory, loans, and overdue tracking.
               </p>
-              <div className="mt-8 flex flex-wrap gap-3">
-                <Button asChild size="lg">
+              <div className="mt-8 flex flex-wrap gap-4">
+                <Button asChild size="lg" className="bg-purple-600 hover:bg-purple-500 text-white font-medium shadow-lg hover:shadow-purple-500/25 transition-all">
                   <Link to="/books">Browse the catalog</Link>
                 </Button>
-                <Button asChild size="lg" variant="outline" className="bg-card/75 backdrop-blur-sm hover:bg-card">
+                <Button asChild size="lg" variant="outline" className="bg-white/10 hover:bg-white/20 text-white border-white/25 backdrop-blur-md font-medium shadow-md">
                   <Link to="/auth">Create an account</Link>
                 </Button>
               </div>
             </div>
 
-            <div className="surface-paper rounded-xl p-6 bg-card/90 backdrop-blur-md shadow-xl border-border/80">
-              <p className="font-display text-sm uppercase tracking-widest text-muted-foreground">Shelf at a glance</p>
-              <dl className="mt-6 grid grid-cols-3 gap-4 text-center">
+            <div className="rounded-2xl p-7 bg-slate-950/75 backdrop-blur-xl border border-white/15 shadow-2xl text-white">
+              <div className="flex items-center justify-between border-b border-white/10 pb-4">
+                <p className="font-display text-sm uppercase tracking-wider text-purple-200 font-semibold">Shelf at a glance</p>
+                <Badge variant="outline" className="border-purple-400/40 text-purple-200 bg-purple-950/40">Live Inventory</Badge>
+              </div>
+              <dl className="mt-6 grid grid-cols-3 gap-3.5 text-center">
                 {[
                   { label: "Titles", value: stats?.titles ?? "—" },
                   { label: "Copies", value: stats?.copies ?? "—" },
                   { label: "Categories", value: stats?.categories ?? "—" },
                 ].map((s) => (
-                  <div key={s.label} className="rounded-lg bg-secondary/80 backdrop-blur-xs py-5 border border-border/50">
-                    <dt className="text-xs uppercase tracking-wide text-muted-foreground">{s.label}</dt>
-                    <dd className="font-display text-3xl font-semibold">{s.value}</dd>
+                  <div key={s.label} className="rounded-xl bg-slate-900/80 backdrop-blur-sm py-4 border border-white/10 shadow-inner">
+                    <dt className="text-xs uppercase tracking-wide text-slate-300 font-medium">{s.label}</dt>
+                    <dd className="font-display text-3xl font-bold text-white mt-1">{s.value}</dd>
                   </div>
                 ))}
               </dl>
-              <p className="mt-6 text-sm text-muted-foreground">
+              <p className="mt-6 text-xs text-slate-300 leading-normal">
                 Loans run for 14 days. Overdue items are highlighted for both the student and the librarian.
               </p>
             </div>

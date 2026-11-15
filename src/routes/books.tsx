@@ -6,6 +6,7 @@ import { BookOpen, Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/lib/session";
 import { ALL_CATEGORIES, mergeBooksWithCatalog, type CatalogBook } from "@/data/booksCatalog";
+import { fetchMergedIssues, executeIssueBook, normalizeIsbn } from "@/lib/circulationStorage";
 import { SiteNav } from "@/components/SiteNav";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -47,19 +48,37 @@ function BooksPage() {
   const books = useMemo(() => mergeBooksWithCatalog(rawBooks), [rawBooks]);
 
   const { data: myIssues = [] } = useQuery({
-    queryKey: ["my-issues"],
+    queryKey: ["my-issues", user?.id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("issued_books")
-        .select("book_id")
-        .eq("status", "issued");
-      if (error) throw error;
-      return data;
+      if (!user) return [];
+      return await fetchMergedIssues(user.id);
     },
     enabled: !!user,
   });
 
-  const issuedBookIds = useMemo(() => new Set(myIssues.map((i) => i.book_id)), [myIssues]);
+  const issuedKeys = useMemo(() => {
+    const keys = new Set<string>();
+    for (const i of myIssues) {
+      if (i.status === "issued") {
+        if (i.book_id) keys.add(i.book_id);
+        if (i.books?.title) keys.add(i.books.title.toLowerCase());
+        if (i.books?.isbn) {
+          const norm = normalizeIsbn(i.books.isbn);
+          if (norm) keys.add(norm);
+        }
+      }
+    }
+    return keys;
+  }, [myIssues]);
+
+  const isBookIssued = (b: CatalogBook) => {
+    const norm = normalizeIsbn(b.isbn);
+    return (
+      (b.id && issuedKeys.has(b.id)) ||
+      (b.title && issuedKeys.has(b.title.toLowerCase())) ||
+      (norm && issuedKeys.has(norm))
+    );
+  };
 
   const categories = useMemo(() => ["All", ...ALL_CATEGORIES], []);
 
@@ -78,34 +97,15 @@ function BooksPage() {
 
   const issueMutation = useMutation({
     mutationFn: async (book: CatalogBook) => {
-      let bookId = book.id;
-      if (!bookId || bookId.startsWith("local-")) {
-        const { data: inserted, error: insertError } = await supabase
-          .from("books")
-          .insert({
-            title: book.title,
-            author: book.author,
-            category: book.category,
-            isbn: book.isbn || null,
-            description: book.description || null,
-            total_copies: book.total_copies,
-            available_copies: book.available_copies,
-            cover_url: book.cover_url || null,
-          })
-          .select("id")
-          .single();
-        if (!insertError && inserted?.id) {
-          bookId = inserted.id;
-        }
-      }
-      const { error } = await supabase.rpc("issue_book", { _book_id: bookId });
-      if (error) throw error;
+      if (!user) throw new Error("Please sign in to borrow books.");
+      await executeIssueBook(book, user);
     },
     onSuccess: () => {
       toast.success("Book issued — due in 14 days.");
       queryClient.invalidateQueries({ queryKey: ["books"] });
       queryClient.invalidateQueries({ queryKey: ["my-issues"] });
       queryClient.invalidateQueries({ queryKey: ["all-issues"] });
+      queryClient.invalidateQueries({ queryKey: ["home-stats"] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -194,7 +194,7 @@ function BooksPage() {
                   </div>
                   <div className="mt-5 pt-1">
                     {user ? (
-                      issuedBookIds.has(book.id) ? (
+                      isBookIssued(book) ? (
                         <Button className="w-full" disabled>
                           Already issued
                         </Button>

@@ -1,11 +1,18 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Trash2 } from "lucide-react";
+import { Trash2, BookOpen, CheckCircle, Send } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { ALL_CATEGORIES, mergeBooksWithCatalog } from "@/data/booksCatalog";
+import { ALL_CATEGORIES, mergeBooksWithCatalog, type CatalogBook } from "@/data/booksCatalog";
 import { daysUntil, formatDate, useSession } from "@/lib/session";
+import {
+  fetchMergedIssues,
+  executeReturnBook,
+  executeIssueBook,
+  normalizeIsbn,
+  type IssueRecord,
+} from "@/lib/circulationStorage";
 import { SiteNav } from "@/components/SiteNav";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,16 +40,6 @@ export const Route = createFileRoute("/admin")({
   component: AdminPage,
 });
 
-type AdminIssue = {
-  id: string;
-  issued_at: string;
-  due_date: string;
-  returned_at: string | null;
-  status: string;
-  user_id: string;
-  books: { title: string; author: string } | null;
-};
-
 function AdminPage() {
   const { user, role, loading } = useSession();
   const navigate = useNavigate();
@@ -65,16 +62,11 @@ function AdminPage() {
 
   const books = useMemo(() => mergeBooksWithCatalog(rawBooks), [rawBooks]);
 
-  const { data: issues = [] } = useQuery({
+  const { data: issues = [] } = useQuery<IssueRecord[]>({
     queryKey: ["all-issues"],
     enabled: isLibrarian,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("issued_books")
-        .select("id, issued_at, due_date, returned_at, status, user_id, books(title, author)")
-        .order("issued_at", { ascending: false });
-      if (error) throw error;
-      return data as unknown as AdminIssue[];
+      return await fetchMergedIssues(undefined, true);
     },
   });
 
@@ -99,19 +91,29 @@ function AdminPage() {
     author: "",
     category: "",
     isbn: "",
+    cover_url: "",
     description: "",
     total_copies: "1",
+  });
+
+  const [manualIssue, setManualIssue] = useState({
+    bookId: "",
+    memberId: "",
   });
 
   const addBook = useMutation({
     mutationFn: async () => {
       const copies = Math.max(1, Number(form.total_copies) || 1);
+      const cleanIsbn = normalizeIsbn(form.isbn);
+      const autoCover = form.cover_url || (cleanIsbn ? `https://covers.openlibrary.org/b/isbn/${cleanIsbn}-M.jpg` : null);
+
       const { error } = await supabase.from("books").insert({
-        title: form.title,
-        author: form.author,
-        category: form.category || "General",
-        isbn: form.isbn || null,
-        description: form.description || null,
+        title: form.title.trim(),
+        author: form.author.trim(),
+        category: form.category.trim() || "General",
+        isbn: cleanIsbn,
+        cover_url: autoCover,
+        description: form.description ? form.description.trim() : null,
         total_copies: copies,
         available_copies: copies,
       });
@@ -119,7 +121,33 @@ function AdminPage() {
     },
     onSuccess: () => {
       toast.success("Book added to the shelf.");
-      setForm({ title: "", author: "", category: "", isbn: "", description: "", total_copies: "1" });
+      setForm({ title: "", author: "", category: "", isbn: "", cover_url: "", description: "", total_copies: "1" });
+      queryClient.invalidateQueries({ queryKey: ["books"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const issueToMemberMutation = useMutation({
+    mutationFn: async () => {
+      if (!manualIssue.bookId || !manualIssue.memberId) {
+        throw new Error("Please select both a book and a member.");
+      }
+      const targetBook = books.find((b) => b.id === manualIssue.bookId);
+      if (!targetBook) throw new Error("Selected book not found.");
+
+      const targetMember = members.find((m) => m.id === manualIssue.memberId);
+      if (!targetMember) throw new Error("Selected member not found.");
+
+      await executeIssueBook(targetBook, {
+        id: targetMember.id,
+        email: targetMember.email,
+        full_name: targetMember.full_name,
+      });
+    },
+    onSuccess: () => {
+      toast.success("Book issued to member successfully.");
+      setManualIssue({ bookId: "", memberId: "" });
+      queryClient.invalidateQueries({ queryKey: ["all-issues"] });
       queryClient.invalidateQueries({ queryKey: ["books"] });
     },
     onError: (e: Error) => toast.error(e.message),
@@ -140,9 +168,8 @@ function AdminPage() {
   });
 
   const forceReturn = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.rpc("return_book", { _issue_id: id });
-      if (error) throw error;
+    mutationFn: async ({ id, bookId }: { id: string; bookId?: string }) => {
+      await executeReturnBook(id, bookId);
     },
     onSuccess: () => {
       toast.success("Marked as returned.");
@@ -204,8 +231,8 @@ function AdminPage() {
         <Tabs defaultValue="inventory" className="mt-10">
           <TabsList>
             <TabsTrigger value="inventory">Inventory</TabsTrigger>
-            <TabsTrigger value="loans">Loans</TabsTrigger>
-            <TabsTrigger value="members">Members</TabsTrigger>
+            <TabsTrigger value="loans">Loans ({activeIssues.length})</TabsTrigger>
+            <TabsTrigger value="members">Members ({members.length})</TabsTrigger>
           </TabsList>
 
           <TabsContent value="inventory" className="mt-6 space-y-8">
@@ -226,6 +253,7 @@ function AdminPage() {
                     <Input
                       id="title"
                       required
+                      placeholder="e.g. Thinking, Fast and Slow"
                       value={form.title}
                       onChange={(e) => setForm({ ...form, title: e.target.value })}
                     />
@@ -235,6 +263,7 @@ function AdminPage() {
                     <Input
                       id="author"
                       required
+                      placeholder="e.g. Daniel Kahneman"
                       value={form.author}
                       onChange={(e) => setForm({ ...form, author: e.target.value })}
                     />
@@ -244,7 +273,7 @@ function AdminPage() {
                     <Input
                       id="category"
                       list="category-options"
-                      placeholder="e.g. Computer Science"
+                      placeholder="e.g. Psychology"
                       value={form.category}
                       onChange={(e) => setForm({ ...form, category: e.target.value })}
                     />
@@ -256,7 +285,21 @@ function AdminPage() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="isbn">ISBN</Label>
-                    <Input id="isbn" value={form.isbn} onChange={(e) => setForm({ ...form, isbn: e.target.value })} />
+                    <Input
+                      id="isbn"
+                      placeholder="e.g. 9780374533557"
+                      value={form.isbn}
+                      onChange={(e) => setForm({ ...form, isbn: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="cover_url">Cover Image URL (optional)</Label>
+                    <Input
+                      id="cover_url"
+                      placeholder="Leave blank to auto-fetch from Open Library"
+                      value={form.cover_url}
+                      onChange={(e) => setForm({ ...form, cover_url: e.target.value })}
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="copies">Total copies</Label>
@@ -273,6 +316,7 @@ function AdminPage() {
                     <Textarea
                       id="description"
                       rows={3}
+                      placeholder="Overview or summary of the book..."
                       value={form.description}
                       onChange={(e) => setForm({ ...form, description: e.target.value })}
                     />
@@ -290,9 +334,9 @@ function AdminPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Title</TableHead>
-                    <TableHead>Author</TableHead>
+                    <TableHead>Book</TableHead>
                     <TableHead>Category</TableHead>
+                    <TableHead>ISBN</TableHead>
                     <TableHead>Available</TableHead>
                     <TableHead className="text-right">Remove</TableHead>
                   </TableRow>
@@ -300,13 +344,36 @@ function AdminPage() {
                 <TableBody>
                   {books.map((b) => (
                     <TableRow key={b.id}>
-                      <TableCell className="font-medium">{b.title}</TableCell>
-                      <TableCell>{b.author}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          {b.cover_url ? (
+                            <img
+                              src={b.cover_url}
+                              alt={b.title}
+                              className="h-12 w-9 rounded object-cover shadow-sm bg-muted flex-shrink-0"
+                              onError={(e) => {
+                                (e.currentTarget as HTMLImageElement).style.display = "none";
+                              }}
+                            />
+                          ) : (
+                            <div className="flex h-12 w-9 items-center justify-center rounded bg-primary/10 text-primary flex-shrink-0">
+                              <BookOpen className="size-4" />
+                            </div>
+                          )}
+                          <div>
+                            <p className="font-medium">{b.title}</p>
+                            <p className="text-xs text-muted-foreground">{b.author}</p>
+                          </div>
+                        </div>
+                      </TableCell>
                       <TableCell>
                         <Badge variant="secondary">{b.category}</Badge>
                       </TableCell>
+                      <TableCell className="text-xs font-mono text-muted-foreground">{b.isbn || "—"}</TableCell>
                       <TableCell>
-                        {b.available_copies}/{b.total_copies}
+                        <Badge variant={b.available_copies > 0 ? "outline" : "destructive"}>
+                          {b.available_copies}/{b.total_copies} available
+                        </Badge>
                       </TableCell>
                       <TableCell className="text-right">
                         <Button
@@ -325,7 +392,64 @@ function AdminPage() {
             </div>
           </TabsContent>
 
-          <TabsContent value="loans" className="mt-6">
+          <TabsContent value="loans" className="mt-6 space-y-6">
+            <Card className="surface-paper">
+              <CardHeader>
+                <CardTitle className="font-display text-xl flex items-center gap-2">
+                  <Send className="size-5" /> Issue Book to Member
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <form
+                  className="grid gap-4 md:grid-cols-3"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    issueToMemberMutation.mutate();
+                  }}
+                >
+                  <div className="space-y-2">
+                    <Label htmlFor="issue-book">Select Book</Label>
+                    <select
+                      id="issue-book"
+                      required
+                      className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                      value={manualIssue.bookId}
+                      onChange={(e) => setManualIssue({ ...manualIssue, bookId: e.target.value })}
+                    >
+                      <option value="">-- Choose a book --</option>
+                      {books.map((b) => (
+                        <option key={b.id} value={b.id} disabled={b.available_copies < 1}>
+                          {b.title} ({b.author}) — {b.available_copies} available
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="issue-member">Select Member</Label>
+                    <select
+                      id="issue-member"
+                      required
+                      className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                      value={manualIssue.memberId}
+                      onChange={(e) => setManualIssue({ ...manualIssue, memberId: e.target.value })}
+                    >
+                      <option value="">-- Choose a member --</option>
+                      {members.map((m) => (
+                        <option key={m.id} value={m.id}>
+                          {m.full_name || m.email} ({m.email})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="flex items-end">
+                    <Button type="submit" className="w-full" disabled={issueToMemberMutation.isPending}>
+                      Issue Book (14 Days)
+                    </Button>
+                  </div>
+                </form>
+              </CardContent>
+            </Card>
+
             <div className="surface-paper overflow-x-auto rounded-lg">
               <Table>
                 <TableHeader>
@@ -341,22 +465,49 @@ function AdminPage() {
                 <TableBody>
                   {issues.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-muted-foreground">
+                      <TableCell colSpan={6} className="text-muted-foreground text-center py-8">
                         No loans recorded yet.
                       </TableCell>
                     </TableRow>
                   ) : (
                     issues.map((i) => {
                       const left = daysUntil(i.due_date);
+                      const title = i.books?.title || "Library Book";
+                      const author = i.books?.author || "Catalog Title";
+                      const coverUrl = i.books?.cover_url;
+
                       return (
                         <TableRow key={i.id}>
-                          <TableCell className="font-medium">{i.books?.title}</TableCell>
-                          <TableCell>{memberName(i.user_id)}</TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-3">
+                              {coverUrl ? (
+                                <img
+                                  src={coverUrl}
+                                  alt={title}
+                                  className="h-12 w-9 rounded object-cover shadow-sm bg-muted flex-shrink-0"
+                                  onError={(e) => {
+                                    (e.currentTarget as HTMLImageElement).style.display = "none";
+                                  }}
+                                />
+                              ) : (
+                                <div className="flex h-12 w-9 items-center justify-center rounded bg-primary/10 text-primary flex-shrink-0">
+                                  <BookOpen className="size-4" />
+                                </div>
+                              )}
+                              <div>
+                                <p className="font-medium">{title}</p>
+                                <p className="text-xs text-muted-foreground">{author}</p>
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell className="font-medium">{memberName(i.user_id)}</TableCell>
                           <TableCell>{formatDate(i.issued_at)}</TableCell>
                           <TableCell>{formatDate(i.due_date)}</TableCell>
                           <TableCell>
                             {i.status === "returned" ? (
-                              <Badge variant="outline">Returned {formatDate(i.returned_at)}</Badge>
+                              <Badge variant="outline" className="flex items-center gap-1 w-fit">
+                                <CheckCircle className="size-3 text-emerald-500" /> Returned {formatDate(i.returned_at)}
+                              </Badge>
                             ) : left < 0 ? (
                               <Badge variant="destructive">{Math.abs(left)} days overdue</Badge>
                             ) : (
@@ -365,7 +516,12 @@ function AdminPage() {
                           </TableCell>
                           <TableCell className="text-right">
                             {i.status === "issued" && (
-                              <Button size="sm" variant="outline" onClick={() => forceReturn.mutate(i.id)}>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                disabled={forceReturn.isPending}
+                                onClick={() => forceReturn.mutate({ id: i.id, bookId: i.book_id })}
+                              >
                                 Mark returned
                               </Button>
                             )}
