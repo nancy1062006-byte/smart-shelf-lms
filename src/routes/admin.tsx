@@ -54,9 +54,17 @@ function AdminPage() {
   const { data: rawBooks = [] } = useQuery({
     queryKey: ["books"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("books").select("*").order("title");
-      if (error) throw error;
-      return data;
+      try {
+        const { data, error } = await supabase.from("books").select("*").order("title");
+        if (error) {
+          console.warn("Could not load remote books in admin:", error.message);
+          return [];
+        }
+        return data || [];
+      } catch (e) {
+        console.warn("Books query error in admin:", e);
+        return [];
+      }
     },
   });
 
@@ -66,7 +74,12 @@ function AdminPage() {
     queryKey: ["all-issues"],
     enabled: isLibrarian,
     queryFn: async () => {
-      return await fetchMergedIssues(undefined, true);
+      try {
+        return await fetchMergedIssues(undefined, true);
+      } catch (e) {
+        console.warn("fetchMergedIssues error in admin:", e);
+        return [];
+      }
     },
   });
 
@@ -74,15 +87,23 @@ function AdminPage() {
     queryKey: ["members"],
     enabled: isLibrarian,
     queryFn: async () => {
-      const [{ data: profiles, error }, { data: roles }] = await Promise.all([
-        supabase.from("profiles").select("id, full_name, email, created_at").order("created_at"),
-        supabase.from("user_roles").select("user_id, role"),
-      ]);
-      if (error) throw error;
-      return (profiles ?? []).map((p) => ({
-        ...p,
-        role: (roles ?? []).find((r) => r.user_id === p.id)?.role ?? "student",
-      }));
+      try {
+        const [{ data: profiles, error }, { data: roles }] = await Promise.all([
+          supabase.from("profiles").select("id, full_name, email, created_at").order("created_at"),
+          supabase.from("user_roles").select("user_id, role"),
+        ]);
+        if (error) {
+          console.warn("Could not fetch members:", error.message);
+          return [];
+        }
+        return (profiles ?? []).map((p) => ({
+          ...p,
+          role: (roles ?? []).find((r) => r.user_id === p.id)?.role ?? "student",
+        }));
+      } catch (e) {
+        console.warn("Members query error:", e);
+        return [];
+      }
     },
   });
 

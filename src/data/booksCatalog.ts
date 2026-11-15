@@ -731,7 +731,7 @@ export const DEFAULT_BOOKS: CatalogBook[] = [
 ];
 
 function getLocalOverrides(): Record<string, { available: number; total: number }> {
-  if (typeof window === "undefined") return {};
+  if (typeof window === "undefined" || typeof localStorage === "undefined") return {};
   try {
     const raw = localStorage.getItem("smartshelf_inventory_overrides_v2");
     return raw ? JSON.parse(raw) : {};

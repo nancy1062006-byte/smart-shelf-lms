@@ -44,13 +44,21 @@ function DashboardPage() {
     queryKey: ["my-profile", user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("full_name, email, created_at")
-        .eq("id", user!.id)
-        .maybeSingle();
-      if (error) throw error;
-      return data;
+      try {
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("full_name, email, created_at")
+          .eq("id", user!.id)
+          .maybeSingle();
+        if (error) {
+          console.warn("Could not fetch profile:", error.message);
+          return null;
+        }
+        return data;
+      } catch (e) {
+        console.warn("Profile fetch error:", e);
+        return null;
+      }
     },
   });
 
@@ -58,7 +66,12 @@ function DashboardPage() {
     queryKey: ["my-issues", user?.id],
     enabled: !!user,
     queryFn: async () => {
-      return await fetchMergedIssues(user!.id);
+      try {
+        return await fetchMergedIssues(user!.id);
+      } catch (e) {
+        console.warn("fetchMergedIssues error in dashboard:", e);
+        return [];
+      }
     },
   });
 

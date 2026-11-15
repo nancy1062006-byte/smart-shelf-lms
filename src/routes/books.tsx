@@ -39,9 +39,17 @@ function BooksPage() {
   const { data: rawBooks = [], isLoading } = useQuery({
     queryKey: ["books"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("books").select("*").order("title");
-      if (error) throw error;
-      return data;
+      try {
+        const { data, error } = await supabase.from("books").select("*").order("title");
+        if (error) {
+          console.warn("Could not load remote books, using catalog:", error.message);
+          return [];
+        }
+        return data || [];
+      } catch (err) {
+        console.warn("Books fetch exception, falling back to catalog:", err);
+        return [];
+      }
     },
   });
 
@@ -51,7 +59,12 @@ function BooksPage() {
     queryKey: ["my-issues", user?.id],
     queryFn: async () => {
       if (!user) return [];
-      return await fetchMergedIssues(user.id);
+      try {
+        return await fetchMergedIssues(user.id);
+      } catch (err) {
+        console.warn("Could not fetch my-issues:", err);
+        return [];
+      }
     },
     enabled: !!user,
   });

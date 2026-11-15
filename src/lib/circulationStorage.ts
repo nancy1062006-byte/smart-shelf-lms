@@ -34,7 +34,7 @@ export function normalizeIsbn(isbn: string | null | undefined): string | null {
  * Retrieves local issue records stored in the browser.
  */
 export function getLocalIssues(): IssueRecord[] {
-  if (typeof window === "undefined") return [];
+  if (typeof window === "undefined" || typeof localStorage === "undefined") return [];
   try {
     const raw = localStorage.getItem(LOCAL_ISSUES_KEY);
     return raw ? JSON.parse(raw) : [];
@@ -48,7 +48,7 @@ export function getLocalIssues(): IssueRecord[] {
  * Saves local issue records.
  */
 export function saveLocalIssues(issues: IssueRecord[]): void {
-  if (typeof window === "undefined") return;
+  if (typeof window === "undefined" || typeof localStorage === "undefined") return;
   try {
     localStorage.setItem(LOCAL_ISSUES_KEY, JSON.stringify(issues));
   } catch (e) {
@@ -60,7 +60,7 @@ export function saveLocalIssues(issues: IssueRecord[]): void {
  * Retrieves local inventory overrides (available_copies adjustments).
  */
 export function getInventoryOverrides(): Record<string, { available: number; total: number }> {
-  if (typeof window === "undefined") return {};
+  if (typeof window === "undefined" || typeof localStorage === "undefined") return {};
   try {
     const raw = localStorage.getItem(INVENTORY_OVERRIDES_KEY);
     return raw ? JSON.parse(raw) : {};
@@ -73,7 +73,7 @@ export function getInventoryOverrides(): Record<string, { available: number; tot
  * Saves local inventory overrides.
  */
 export function saveInventoryOverride(key: string, available: number, total: number): void {
-  if (typeof window === "undefined") return;
+  if (typeof window === "undefined" || typeof localStorage === "undefined") return;
   try {
     const current = getInventoryOverrides();
     current[key] = { available, total };
@@ -130,15 +130,15 @@ export async function fetchMergedIssues(userId?: string, isLibrarian = false): P
   const merged: IssueRecord[] = [];
   const seenIds = new Set<string>();
 
-  // 1. Fetch remote Supabase issues if user is authenticated
-  if (userId) {
+  // 1. Fetch remote Supabase issues if user is authenticated or librarian
+  if (userId || isLibrarian) {
     try {
       let query = supabase
         .from("issued_books")
         .select("id, book_id, user_id, issued_at, due_date, returned_at, status, books(title, author, category, isbn, cover_url)")
         .order("issued_at", { ascending: false });
 
-      if (!isLibrarian) {
+      if (!isLibrarian && userId) {
         query = query.eq("user_id", userId);
       }
 

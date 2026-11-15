@@ -41,7 +41,12 @@ function CirculationPage() {
     queryKey: ["my-issues", user?.id],
     enabled: !!user,
     queryFn: async () => {
-      return await fetchMergedIssues(user!.id);
+      try {
+        return await fetchMergedIssues(user!.id);
+      } catch (e) {
+        console.warn("fetchMergedIssues error in circulation page:", e);
+        return [];
+      }
     },
   });
 

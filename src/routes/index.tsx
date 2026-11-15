@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { mergeBooksWithCatalog } from "@/data/booksCatalog";
 import { SiteNav } from "@/components/SiteNav";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 
 export const Route = createFileRoute("/")({
@@ -50,12 +51,21 @@ function Home() {
   const { data: stats } = useQuery({
     queryKey: ["home-stats"],
     queryFn: async () => {
-      const { data } = await supabase.from("books").select("*");
-      const booksList = mergeBooksWithCatalog(data || []);
-      const titles = booksList.length;
-      const copies = booksList.reduce((sum, b) => sum + b.total_copies, 0);
-      const categories = new Set(booksList.map((b) => b.category)).size;
-      return { titles, copies, categories };
+      try {
+        const { data } = await supabase.from("books").select("*");
+        const booksList = mergeBooksWithCatalog(data || []);
+        const titles = booksList.length;
+        const copies = booksList.reduce((sum, b) => sum + (b.total_copies || 0), 0);
+        const categories = new Set(booksList.map((b) => b.category)).size;
+        return { titles, copies, categories };
+      } catch (err) {
+        console.warn("Failed to fetch home stats, using default catalog:", err);
+        const booksList = mergeBooksWithCatalog([]);
+        const titles = booksList.length;
+        const copies = booksList.reduce((sum, b) => sum + (b.total_copies || 0), 0);
+        const categories = new Set(booksList.map((b) => b.category)).size;
+        return { titles, copies, categories };
+      }
     },
   });
 
