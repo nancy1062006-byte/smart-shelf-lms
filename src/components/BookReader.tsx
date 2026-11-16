@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   BookOpen,
   X,
@@ -10,10 +10,8 @@ import {
   User,
   FileText,
 } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { getBookContent } from "@/data/bookContent";
 import type { CatalogBook } from "@/data/booksCatalog";
@@ -41,49 +39,79 @@ const CATEGORY_COLORS: Record<string, string> = {
 
 export function BookReader({ open, onClose, book }: BookReaderProps) {
   const [openChapter, setOpenChapter] = useState<number | null>(0);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
-  if (!book) return null;
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = "hidden";
+      // Reset to first chapter on each open
+      setOpenChapter(0);
+      // Scroll content to top
+      if (scrollRef.current) scrollRef.current.scrollTop = 0;
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => { document.body.style.overflow = ""; };
+  }, [open]);
 
-  const content =
-    getBookContent(book.isbn) ||
-    getBookContent(book.title);
+  // Close on Escape key
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [open, onClose]);
 
+  if (!open || !book) return null;
+
+  const content = getBookContent(book.isbn) || getBookContent(book.title);
   const categoryStyle = CATEGORY_COLORS[book.category] ?? "bg-purple-100 text-purple-700 border-purple-200";
-
   const availabilityColor =
     book.available_copies > 0
       ? "bg-emerald-50 text-emerald-700 border-emerald-200"
       : "bg-rose-50 text-rose-700 border-rose-200";
 
   return (
-    <Dialog open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
-      <DialogContent
+    <>
+      {/* Backdrop */}
+      <div
+        className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm"
+        onClick={onClose}
+        aria-hidden="true"
+      />
+
+      {/* Modal — full height flex column */}
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={`Reading: ${book.title}`}
         className={cn(
-          "max-w-3xl w-full p-0 gap-0 bg-white/98 border border-slate-200 shadow-2xl",
-          "max-h-[92vh] flex flex-col overflow-hidden rounded-2xl"
+          "fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2",
+          "w-full max-w-3xl mx-4",
+          "flex flex-col",
+          "h-[90vh] max-h-[90vh]",           // ← fixed viewport height
+          "bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden"
         )}
       >
-        {/* Header */}
-        <DialogHeader className="flex-shrink-0 px-6 pt-6 pb-4 border-b border-slate-100 bg-[#FCFBF8]">
+        {/* ── HEADER (fixed, never scrolls) ── */}
+        <div className="flex-none border-b border-slate-100 bg-[#FCFBF8] px-6 pt-5 pb-4">
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-start gap-3 min-w-0">
-              {/* Book Cover Thumbnail */}
-              <div className="flex-shrink-0 h-16 w-12 rounded-lg overflow-hidden border border-slate-200 shadow-sm bg-slate-100">
+              {/* Book cover thumbnail */}
+              <div className="flex-none h-16 w-11 rounded-lg overflow-hidden border border-slate-200 shadow-sm bg-slate-100">
                 {book.cover_url || book.isbn ? (
                   <img
-                    src={
-                      book.cover_url ||
-                      `https://covers.openlibrary.org/b/isbn/${book.isbn}-M.jpg`
-                    }
+                    src={book.cover_url || `https://covers.openlibrary.org/b/isbn/${book.isbn}-M.jpg`}
                     alt={book.title}
                     className="h-full w-full object-cover"
                     onError={(e) => {
-                      const target = e.currentTarget;
-                      if (book.isbn && !target.dataset.triedGoogle) {
-                        target.dataset.triedGoogle = "true";
-                        target.src = `https://books.google.com/books/content?vid=isbn${book.isbn}&printsec=frontcover&img=1&zoom=1`;
+                      const t = e.currentTarget;
+                      if (book.isbn && !t.dataset.triedGoogle) {
+                        t.dataset.triedGoogle = "true";
+                        t.src = `https://books.google.com/books/content?vid=isbn${book.isbn}&printsec=frontcover&img=1&zoom=1`;
                       } else {
-                        target.style.display = "none";
+                        t.style.display = "none";
                       }
                     }}
                   />
@@ -94,11 +122,11 @@ export function BookReader({ open, onClose, book }: BookReaderProps) {
                 )}
               </div>
 
-              {/* Title & Meta */}
+              {/* Title & meta */}
               <div className="min-w-0">
-                <DialogTitle className="font-display text-lg font-bold text-slate-900 leading-snug line-clamp-2">
+                <h2 className="font-display text-lg font-bold text-slate-900 leading-snug line-clamp-2">
                   {book.title}
-                </DialogTitle>
+                </h2>
                 <div className="mt-1.5 flex flex-wrap items-center gap-2">
                   <span className="flex items-center gap-1 text-xs text-slate-500 font-medium">
                     <User className="size-3" />
@@ -124,19 +152,23 @@ export function BookReader({ open, onClose, book }: BookReaderProps) {
             {/* Close button */}
             <button
               onClick={onClose}
-              className="flex-shrink-0 p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+              className="flex-none p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer mt-0.5"
               aria-label="Close reader"
             >
               <X className="size-5" />
             </button>
           </div>
-        </DialogHeader>
+        </div>
 
-        {/* Scrollable Reading Area */}
-        <ScrollArea className="flex-1 min-h-0">
+        {/* ── SCROLLABLE BODY (takes all remaining height) ── */}
+        <div
+          ref={scrollRef}
+          className="flex-1 overflow-y-auto overscroll-contain"
+          style={{ WebkitOverflowScrolling: "touch" }}
+        >
           <div className="px-6 py-5 space-y-6">
 
-            {/* Summary Section */}
+            {/* Book Overview */}
             <section>
               <div className="flex items-center gap-2 mb-2">
                 <FileText className="size-4 text-[#6C4AB6]" />
@@ -163,7 +195,7 @@ export function BookReader({ open, onClose, book }: BookReaderProps) {
                 <ul className="space-y-2">
                   {content.key_takeaways.map((point, i) => (
                     <li key={i} className="flex items-start gap-2 text-sm text-slate-700">
-                      <span className="mt-0.5 flex-shrink-0 size-5 rounded-full bg-purple-100 text-[#6C4AB6] flex items-center justify-center text-[11px] font-bold">
+                      <span className="mt-0.5 flex-none size-5 rounded-full bg-purple-100 text-[#6C4AB6] flex items-center justify-center text-[11px] font-bold">
                         {i + 1}
                       </span>
                       <span className="leading-relaxed">{point}</span>
@@ -176,7 +208,7 @@ export function BookReader({ open, onClose, book }: BookReaderProps) {
             {/* Divider */}
             <div className="border-t border-slate-100" />
 
-            {/* Chapters */}
+            {/* Chapter Study Guide */}
             <section>
               <div className="flex items-center gap-2 mb-3">
                 <BookMarked className="size-4 text-[#6C4AB6]" />
@@ -199,7 +231,7 @@ export function BookReader({ open, onClose, book }: BookReaderProps) {
                             : "border-slate-200 bg-slate-50 hover:border-slate-300 hover:bg-white"
                         )}
                       >
-                        {/* Chapter Header */}
+                        {/* Chapter toggle button */}
                         <button
                           className="w-full flex items-center justify-between gap-3 px-4 py-3 cursor-pointer text-left"
                           onClick={() => setOpenChapter(isOpen ? null : idx)}
@@ -208,21 +240,17 @@ export function BookReader({ open, onClose, book }: BookReaderProps) {
                           <div className="flex items-center gap-3 min-w-0">
                             <span
                               className={cn(
-                                "flex-shrink-0 size-7 rounded-lg flex items-center justify-center text-xs font-bold",
-                                isOpen
-                                  ? "bg-[#6C4AB6] text-white"
-                                  : "bg-slate-200 text-slate-600"
+                                "flex-none size-7 rounded-lg flex items-center justify-center text-xs font-bold",
+                                isOpen ? "bg-[#6C4AB6] text-white" : "bg-slate-200 text-slate-600"
                               )}
                             >
                               {chapter.chapter_number}
                             </span>
                             <div className="min-w-0">
-                              <p
-                                className={cn(
-                                  "text-sm font-semibold truncate",
-                                  isOpen ? "text-[#6C4AB6]" : "text-slate-800"
-                                )}
-                              >
+                              <p className={cn(
+                                "text-sm font-semibold truncate",
+                                isOpen ? "text-[#6C4AB6]" : "text-slate-800"
+                              )}>
                                 {chapter.title}
                               </p>
                               {!isOpen && chapter.summary && (
@@ -232,30 +260,29 @@ export function BookReader({ open, onClose, book }: BookReaderProps) {
                               )}
                             </div>
                           </div>
-                          {isOpen ? (
-                            <ChevronDown className="flex-shrink-0 size-4 text-[#6C4AB6]" />
-                          ) : (
-                            <ChevronRight className="flex-shrink-0 size-4 text-slate-400" />
-                          )}
+                          {isOpen
+                            ? <ChevronDown className="flex-none size-4 text-[#6C4AB6]" />
+                            : <ChevronRight className="flex-none size-4 text-slate-400" />
+                          }
                         </button>
 
-                        {/* Chapter Content */}
+                        {/* Expanded chapter content */}
                         {isOpen && (
-                          <div className="px-4 pb-4 border-t border-slate-100">
+                          <div className="px-4 pb-5 border-t border-slate-100">
                             {chapter.summary && (
-                              <p className="mt-3 text-xs font-semibold text-[#6C4AB6] uppercase tracking-wide">
-                                Summary
-                              </p>
+                              <>
+                                <p className="mt-3 text-[11px] font-bold text-[#6C4AB6] uppercase tracking-widest">
+                                  Summary
+                                </p>
+                                <p className="mt-1.5 text-sm text-slate-600 leading-relaxed italic">
+                                  {chapter.summary}
+                                </p>
+                              </>
                             )}
-                            {chapter.summary && (
-                              <p className="mt-1 text-sm text-slate-600 leading-relaxed italic">
-                                {chapter.summary}
-                              </p>
-                            )}
-                            <p className="mt-3 text-xs font-semibold text-slate-700 uppercase tracking-wide">
+                            <p className="mt-4 text-[11px] font-bold text-slate-600 uppercase tracking-widest">
                               Study Notes
                             </p>
-                            <p className="mt-1 text-sm text-slate-800 leading-[1.8] font-serif">
+                            <p className="mt-1.5 text-sm text-slate-800 leading-[1.85] font-serif">
                               {chapter.content}
                             </p>
                           </div>
@@ -267,9 +294,7 @@ export function BookReader({ open, onClose, book }: BookReaderProps) {
               ) : (
                 <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-5 py-8 text-center">
                   <BookOpen className="size-8 text-slate-300 mx-auto mb-2" />
-                  <p className="text-sm text-slate-500 font-medium">
-                    Detailed chapter guide coming soon.
-                  </p>
+                  <p className="text-sm text-slate-500 font-medium">Detailed chapter guide coming soon.</p>
                   <p className="text-xs text-slate-400 mt-1">
                     {book.description || "This title is available in the physical library."}
                   </p>
@@ -277,19 +302,20 @@ export function BookReader({ open, onClose, book }: BookReaderProps) {
               )}
             </section>
 
-            {/* ISBN / Reference Footer */}
+            {/* ISBN footer */}
             {book.isbn && (
-              <div className="text-xs text-slate-400 text-center pb-2 font-mono">
+              <p className="text-[11px] text-slate-400 text-center pb-2 font-mono">
                 ISBN: {book.isbn}
-              </div>
+              </p>
             )}
-          </div>
-        </ScrollArea>
 
-        {/* Footer Actions */}
-        <div className="flex-shrink-0 px-6 py-4 border-t border-slate-100 bg-[#FCFBF8] flex items-center justify-between gap-3">
+          </div>
+        </div>
+
+        {/* ── FOOTER (fixed, never scrolls) ── */}
+        <div className="flex-none px-6 py-3 border-t border-slate-100 bg-[#FCFBF8] flex items-center justify-between gap-3">
           <p className="text-xs text-slate-500">
-            Smart-Shelf Digital Study Guide — All content is for educational reference.
+            Smart-Shelf Study Guide — Educational reference only.
           </p>
           <Button
             onClick={onClose}
@@ -300,7 +326,7 @@ export function BookReader({ open, onClose, book }: BookReaderProps) {
             <X className="size-3.5 mr-1.5" /> Close
           </Button>
         </div>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </>
   );
 }
