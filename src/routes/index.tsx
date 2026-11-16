@@ -169,34 +169,34 @@ function Home() {
 
       <main>
         {/* ================= HERO SECTION ================= */}
-        <section className="relative overflow-hidden border-b border-[#1D3557] bg-[#14213D] shadow-xl">
-          {/* Bookshelf Background Image with Balanced Dark Navy Overlay */}
+        <section className="relative overflow-hidden border-b border-[#E2E8F0] bg-[#FAF7F2] shadow-sm">
+          {/* Warm Cozy Bookshelf Background Image with Light 80-85% White/Cream Overlay */}
           <div className="absolute inset-0 pointer-events-none -z-10 overflow-hidden">
             <img
-              src="https://images.unsplash.com/photo-1521587760476-6c12a4b040da?auto=format&fit=crop&w=2400&q=90"
-              alt="College Library Bookshelf"
-              className="h-full w-full object-cover object-center brightness-90 contrast-105"
+              src="https://images.unsplash.com/photo-1507842229451-7f01dd8629d8?auto=format&fit=crop&w=2400&q=90"
+              alt="Warm Cozy College Library Bookshelf"
+              className="h-full w-full object-cover object-center brightness-95 contrast-95"
             />
-            {/* Balanced Dark Navy Overlay: WCAG AA Compliant contrast */}
-            <div className="absolute inset-0 bg-gradient-to-r from-[#14213D]/95 via-[#14213D]/85 to-[#1D3557]/80" />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#14213D]/95 via-transparent to-[#14213D]/50" />
+            {/* Subtle, Light 80-85% White/Cream Tint Overlay */}
+            <div className="absolute inset-0 bg-gradient-to-r from-white/88 via-[#FDFBF7]/82 to-white/88 backdrop-blur-[2px]" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#FAF7F2] via-transparent to-white/50" />
           </div>
 
           <div className="relative mx-auto grid max-w-7xl gap-12 px-4 py-20 sm:px-6 md:grid-cols-[1.2fr_0.9fr] md:items-center lg:py-28 lg:px-8">
             {/* Left Content */}
             <div>
-              <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-purple-400/40 bg-[#1D3557]/80 backdrop-blur-md px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-purple-200 shadow-md">
-                <Sparkles className="size-3.5 text-[#8B5CF6]" /> College Library Management System
+              <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#DDD6FE] bg-white/90 backdrop-blur-md px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-[#6C4AB6] shadow-xs">
+                <Sparkles className="size-3.5 text-[#6C4AB6]" /> College Library Management System
               </div>
 
-              <h1 className="text-4xl font-bold tracking-tight text-white md:text-5xl lg:text-6xl leading-[1.15] drop-shadow-sm font-display">
+              <h1 className="text-4xl font-bold tracking-tight text-[#14213D] md:text-5xl lg:text-6xl leading-[1.15] font-display">
                 The whole library,{" "}
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-300 via-purple-200 to-indigo-200">
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#6C4AB6] via-[#7C3AED] to-[#1D3557]">
                   on one shelf.
                 </span>
               </h1>
 
-              <p className="mt-6 max-w-xl text-lg text-slate-200 leading-relaxed drop-shadow-xs">
+              <p className="mt-6 max-w-xl text-lg text-[#334155] leading-relaxed font-medium">
                 Smart-Shelf empowers students with an interactive catalog, real-time availability, and one-click
                 borrowing, while giving librarians complete control over inventory, active loans, and overdue tracking.
               </p>
@@ -206,7 +206,7 @@ function Home() {
                 <Button
                   asChild
                   size="lg"
-                  className="bg-[#6C4AB6] hover:bg-[#8B5CF6] text-white font-semibold shadow-lg shadow-[#6C4AB6]/30 transition-all hover:-translate-y-0.5 text-base px-6 h-12"
+                  className="bg-[#6C4AB6] hover:bg-[#8B5CF6] text-white font-semibold shadow-lg shadow-[#6C4AB6]/25 transition-all hover:-translate-y-0.5 text-base px-6 h-12"
                 >
                   <Link to="/books">
                     Explore Books <ArrowRight className="size-4 ml-1" />
@@ -218,10 +218,10 @@ function Home() {
                     asChild
                     size="lg"
                     variant="outline"
-                    className="bg-white/10 hover:bg-white/20 text-white border-white/30 backdrop-blur-md font-medium shadow-md text-base px-6 h-12"
+                    className="bg-white hover:bg-slate-50 text-[#14213D] border-[#CBD5E1] font-semibold shadow-xs text-base px-6 h-12 transition-all"
                   >
                     <Link to="/dashboard">
-                      <LayoutDashboard className="size-4 mr-2" /> My Dashboard
+                      <LayoutDashboard className="size-4 mr-2 text-[#6C4AB6]" /> My Dashboard
                     </Link>
                   </Button>
                 ) : (
@@ -229,7 +229,7 @@ function Home() {
                     asChild
                     size="lg"
                     variant="outline"
-                    className="bg-white/10 hover:bg-white/20 text-white border-white/30 backdrop-blur-md font-medium shadow-md text-base px-6 h-12"
+                    className="bg-white hover:bg-slate-50 text-[#14213D] border-[#CBD5E1] font-semibold shadow-xs text-base px-6 h-12 transition-all"
                   >
                     <Link to="/auth">Create an Account</Link>
                   </Button>
@@ -237,80 +237,79 @@ function Home() {
               </div>
 
               {/* Highlights */}
-              <div className="mt-8 flex flex-wrap items-center gap-6 pt-6 border-t border-white/15 text-xs text-slate-300 font-medium">
+              <div className="mt-8 flex flex-wrap items-center gap-6 pt-6 border-t border-[#E2E8F0] text-xs text-[#475569] font-semibold">
                 <span className="flex items-center gap-1.5">
-                  <CheckCircle2 className="size-4 text-emerald-400" /> 14-Day Automated Loan Period
+                  <CheckCircle2 className="size-4 text-[#15803D]" /> 14-Day Automated Loan Period
                 </span>
                 <span className="flex items-center gap-1.5">
-                  <CheckCircle2 className="size-4 text-emerald-400" /> Multi-disciplinary Catalog
+                  <CheckCircle2 className="size-4 text-[#15803D]" /> Multi-disciplinary Catalog
                 </span>
                 <span className="flex items-center gap-1.5">
-                  <CheckCircle2 className="size-4 text-emerald-400" /> Instant Due Date Alerts
+                  <CheckCircle2 className="size-4 text-[#15803D]" /> Instant Due Date Alerts
                 </span>
               </div>
             </div>
 
             {/* Right Card: Shelf at a Glance (Dynamic Statistics) */}
-            <div className="rounded-2xl p-7 bg-[#14213D]/90 backdrop-blur-xl border border-white/20 shadow-2xl text-white transition-all">
-              <div className="flex items-center justify-between border-b border-white/15 pb-4">
+            <div className="rounded-2xl p-7 bg-white/95 backdrop-blur-md border border-[#E2E8F0] shadow-xl text-[#1F2937] transition-all">
+              <div className="flex items-center justify-between border-b border-[#F1F5F9] pb-4">
                 <div className="flex items-center gap-2.5">
-                  <span className="flex size-8 items-center justify-center rounded-lg bg-[#6C4AB6]/40 text-[#8B5CF6]">
-                    <Layers className="size-4" />
+                  <span className="flex size-9 items-center justify-center rounded-xl bg-[#F0EBFA] text-[#6C4AB6] border border-[#DDD6FE]">
+                    <Layers className="size-5" />
                   </span>
                   <div>
-                    <h2 className="font-display text-base uppercase tracking-wider text-white font-semibold">
+                    <h2 className="font-display text-base uppercase tracking-wider text-[#14213D] font-bold">
                       Shelf at a Glance
                     </h2>
-                    <p className="text-[11px] text-slate-300">Live Database Metrics</p>
+                    <p className="text-[11px] text-[#64748B]">Live Database Metrics</p>
                   </div>
                 </div>
                 <Badge
-                  variant="outline"
-                  className="border-emerald-400/50 text-emerald-300 bg-emerald-950/50 text-xs px-2.5 py-0.5 font-semibold"
+                  className="border-emerald-200 text-[#15803D] bg-emerald-50 text-xs px-2.5 py-0.5 font-semibold"
                 >
-                  <span className="size-1.5 rounded-full bg-emerald-400 inline-block mr-1.5 animate-pulse" />
+                  <span className="size-2 rounded-full bg-[#15803D] inline-block mr-1.5 animate-pulse" />
                   Active System
                 </Badge>
               </div>
 
               {/* Dynamic Metric Cards */}
               <dl className="mt-6 grid grid-cols-3 gap-3.5 text-center">
-                <div className="rounded-xl bg-[#1D3557]/80 backdrop-blur-sm p-4 border border-white/10 shadow-sm transition-all hover:bg-[#1D3557]">
-                  <div className="flex justify-center text-[#8B5CF6] mb-1.5">
+                <div className="rounded-xl bg-[#FAF7F2] p-4 border border-[#E2E8F0] shadow-xs transition-all hover:border-[#6C4AB6]/40 hover:bg-white">
+                  <div className="flex justify-center text-[#6C4AB6] mb-1.5">
                     <BookOpen className="size-5" />
                   </div>
-                  <dt className="text-xs uppercase tracking-wide text-slate-300 font-medium">Total Titles</dt>
-                  <dd className="font-display text-3xl font-bold text-white mt-1">
+                  <dt className="text-xs uppercase tracking-wide text-[#64748B] font-bold">Total Titles</dt>
+                  <dd className="font-display text-3xl font-bold text-[#14213D] mt-1">
                     {isLoading ? (
-                      <span className="inline-block size-6 animate-pulse rounded bg-white/20" />
+                      <span className="inline-block size-6 animate-pulse rounded bg-slate-200" />
                     ) : (
                       stats.titles
                     )}
                   </dd>
                 </div>
 
-                <div className="rounded-xl bg-[#1D3557]/80 backdrop-blur-sm p-4 border border-white/10 shadow-sm transition-all hover:bg-[#1D3557]">
-                  <div className="flex justify-center text-emerald-400 mb-1.5">
+                <div className="rounded-xl bg-[#FAF7F2] p-4 border border-[#E2E8F0] shadow-xs transition-all hover:border-[#6C4AB6]/40 hover:bg-white">
+                  <div className="flex justify-center text-[#15803D] mb-1.5">
                     <BookmarkCheck className="size-5" />
                   </div>
-                  <dt className="text-xs uppercase tracking-wide text-slate-300 font-medium">Total Copies</dt>
-                  <dd className="font-display text-3xl font-bold text-white mt-1">
+                  <dt className="text-xs uppercase tracking-wide text-[#64748B] font-bold">Total Copies</dt>
+                  <dd className="font-display text-3xl font-bold text-[#14213D] mt-1">
                     {isLoading ? (
-                      <span className="inline-block size-6 animate-pulse rounded bg-white/20" />
+                      <span className="inline-block size-6 animate-pulse rounded bg-slate-200" />
                     ) : (
                       stats.copies
                     )}
                   </dd>
                 </div>
 
-                <div className="rounded-xl bg-[#1D3557]/80 backdrop-blur-sm p-4 border border-white/10 shadow-sm transition-all hover:bg-[#1D3557]">
-                  <div className="flex justify-center text-amber-300 mb-1.5">
+                <div className="rounded-xl bg-[#FAF7F2] p-4 border border-[#E2E8F0] shadow-xs transition-all hover:border-[#6C4AB6]/40 hover:bg-white">
+                  <div className="flex justify-center text-[#D97706] mb-1.5">
                     <Layers className="size-5" />
                   </div>
-                  <dt className="text-xs uppercase tracking-wide text-slate-300 font-medium">Categories</dt>
-                  <dd className="font-display text-3xl font-bold text-white mt-1">
+                  <dt className="text-xs uppercase tracking-wide text-[#64748B] font-bold">Categories</dt>
+                  <dd className="font-display text-3xl font-bold text-[#14213D] mt-1">
                     {isLoading ? (
-                      <span className="inline-block size-6 animate-pulse rounded bg-white/20" />
+                      <span className="inline-block size-6 animate-pulse rounded bg-slate-200" />
                     ) : (
                       stats.categories
                     )}
@@ -319,16 +318,16 @@ function Home() {
               </dl>
 
               {/* Real-time Availability Bar */}
-              <div className="mt-6 rounded-xl bg-[#1D3557]/50 p-4 border border-white/10">
-                <div className="flex items-center justify-between text-xs text-slate-200 font-medium mb-1.5">
+              <div className="mt-6 rounded-xl bg-[#F8FAFC] p-4 border border-[#E2E8F0]">
+                <div className="flex items-center justify-between text-xs text-[#334155] font-semibold mb-1.5">
                   <span>Available on Shelf</span>
-                  <span className="font-semibold text-emerald-300">
+                  <span className="font-bold text-[#15803D]">
                     {stats.available} of {stats.copies} copies
                   </span>
                 </div>
-                <div className="h-2 w-full rounded-full bg-slate-800 overflow-hidden">
+                <div className="h-2.5 w-full rounded-full bg-slate-200 overflow-hidden">
                   <div
-                    className="h-full rounded-full bg-gradient-to-r from-[#6C4AB6] to-emerald-400 transition-all duration-500"
+                    className="h-full rounded-full bg-gradient-to-r from-[#6C4AB6] to-[#15803D] transition-all duration-500"
                     style={{
                       width: `${stats.copies > 0 ? (stats.available / stats.copies) * 100 : 0}%`,
                     }}
@@ -336,7 +335,7 @@ function Home() {
                 </div>
               </div>
 
-              <p className="mt-4 text-xs text-slate-300 leading-normal text-center">
+              <p className="mt-4 text-xs text-[#64748B] leading-normal text-center">
                 Loans run for 14 calendar days. Inventory counts dynamically update with every issue and return.
               </p>
             </div>
