@@ -1,8 +1,20 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState, useMemo } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Trash2, BookOpen, CheckCircle, Send } from "lucide-react";
+import {
+  Trash2,
+  BookOpen,
+  CheckCircle,
+  Send,
+  Shield,
+  Layers,
+  Users,
+  AlertTriangle,
+  Clock,
+  PlusCircle,
+  ArrowRight,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { ALL_CATEGORIES, mergeBooksWithCatalog, type CatalogBook } from "@/data/booksCatalog";
 import { daysUntil, formatDate, useSession } from "@/lib/session";
@@ -19,19 +31,20 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
     meta: [
-      { title: "Librarian dashboard — Smart-Shelf Library" },
+      { title: "Librarian Dashboard — Smart-Shelf Library" },
       {
         name: "description",
-        content: "Manage the Smart-Shelf inventory: add or remove books, review issued and overdue loans, and see member statistics.",
+        content:
+          "Manage the Smart-Shelf inventory: add or remove books, review issued and overdue loans, and oversee college library members.",
       },
-      { property: "og:title", content: "Librarian dashboard — Smart-Shelf Library" },
+      { property: "og:title", content: "Librarian Dashboard — Smart-Shelf Library" },
       { property: "og:description", content: "Inventory, loans, overdue tracking, and member management." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -51,6 +64,7 @@ function AdminPage() {
 
   const isLibrarian = role === "librarian";
 
+  // Fetch catalog books
   const { data: rawBooks = [] } = useQuery({
     queryKey: ["books"],
     queryFn: async () => {
@@ -70,6 +84,7 @@ function AdminPage() {
 
   const books = useMemo(() => mergeBooksWithCatalog(rawBooks), [rawBooks]);
 
+  // Fetch all circulation issues
   const { data: issues = [] } = useQuery<IssueRecord[]>({
     queryKey: ["all-issues"],
     enabled: isLibrarian,
@@ -83,6 +98,7 @@ function AdminPage() {
     },
   });
 
+  // Fetch library members
   const { data: members = [] } = useQuery({
     queryKey: ["members"],
     enabled: isLibrarian,
@@ -124,9 +140,14 @@ function AdminPage() {
 
   const addBook = useMutation({
     mutationFn: async () => {
+      if (!form.title.trim() || !form.author.trim()) {
+        throw new Error("Please provide at least a title and author.");
+      }
       const copies = Math.max(1, Number(form.total_copies) || 1);
       const cleanIsbn = normalizeIsbn(form.isbn);
-      const autoCover = form.cover_url || (cleanIsbn ? `https://covers.openlibrary.org/b/isbn/${cleanIsbn}-M.jpg` : null);
+      const autoCover =
+        form.cover_url ||
+        (cleanIsbn ? `https://covers.openlibrary.org/b/isbn/${cleanIsbn}-M.jpg` : null);
 
       const { error } = await supabase.from("books").insert({
         title: form.title.trim(),
@@ -141,9 +162,18 @@ function AdminPage() {
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Book added to the shelf.");
-      setForm({ title: "", author: "", category: "", isbn: "", cover_url: "", description: "", total_copies: "1" });
+      toast.success("Book added to the college catalog successfully!");
+      setForm({
+        title: "",
+        author: "",
+        category: "",
+        isbn: "",
+        cover_url: "",
+        description: "",
+        total_copies: "1",
+      });
       queryClient.invalidateQueries({ queryKey: ["books"] });
+      queryClient.invalidateQueries({ queryKey: ["home-stats"] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -166,24 +196,29 @@ function AdminPage() {
       });
     },
     onSuccess: () => {
-      toast.success("Book issued to member successfully.");
+      toast.success("Book issued to member successfully (14 Days).");
       setManualIssue({ bookId: "", memberId: "" });
       queryClient.invalidateQueries({ queryKey: ["all-issues"] });
       queryClient.invalidateQueries({ queryKey: ["books"] });
+      queryClient.invalidateQueries({ queryKey: ["home-stats"] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
 
   const removeBook = useMutation({
     mutationFn: async (id: string) => {
-      if (id.startsWith("local-")) return;
+      if (id.startsWith("local-")) {
+        toast.info("Default catalog titles cannot be deleted, but can be managed locally.");
+        return;
+      }
       const { error } = await supabase.from("books").delete().eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Book removed.");
+      toast.success("Book removed from catalog.");
       queryClient.invalidateQueries({ queryKey: ["books"] });
       queryClient.invalidateQueries({ queryKey: ["all-issues"] });
+      queryClient.invalidateQueries({ queryKey: ["home-stats"] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -193,22 +228,38 @@ function AdminPage() {
       await executeReturnBook(id, bookId);
     },
     onSuccess: () => {
-      toast.success("Marked as returned.");
+      toast.success("Book successfully marked as returned.");
       queryClient.invalidateQueries({ queryKey: ["all-issues"] });
       queryClient.invalidateQueries({ queryKey: ["books"] });
+      queryClient.invalidateQueries({ queryKey: ["home-stats"] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
 
+  // Guard for non-librarian users
   if (!loading && user && !isLibrarian) {
     return (
-      <div className="min-h-screen">
+      <div className="min-h-screen bg-[#F5F6FA] text-[#1F2937]">
         <SiteNav />
-        <main className="mx-auto max-w-3xl px-4 py-24 text-center">
-          <h1 className="text-3xl font-semibold">Librarians only</h1>
-          <p className="mt-3 text-muted-foreground">
-            This dashboard is restricted to librarian accounts. Register with the librarian role to access it.
-          </p>
+        <main className="mx-auto max-w-xl px-4 py-24 text-center">
+          <div className="rounded-2xl border border-[#E2E8F0] bg-white p-10 shadow-sm">
+            <div className="flex size-14 items-center justify-center rounded-2xl bg-amber-50 text-[#D97706] mx-auto mb-4 border border-amber-200">
+              <Shield className="size-7" />
+            </div>
+            <h1 className="font-display text-2xl font-bold text-[#14213D]">Librarians Only</h1>
+            <p className="mt-2 text-sm text-[#64748B] leading-relaxed">
+              This dashboard is restricted to authorized college library staff. If you need administrative access,
+              please register an account with the "Librarian" role.
+            </p>
+            <div className="mt-6 flex justify-center gap-3">
+              <Button asChild className="bg-[#6C4AB6] hover:bg-[#8B5CF6] text-white text-xs font-semibold">
+                <Link to="/dashboard">Go to Student Dashboard</Link>
+              </Button>
+              <Button asChild variant="outline" className="border-[#E2E8F0] text-xs font-semibold">
+                <Link to="/books">Browse Books</Link>
+              </Button>
+            </div>
+          </div>
         </main>
       </div>
     );
@@ -220,81 +271,168 @@ function AdminPage() {
   const availableCopies = books.reduce((s, b) => s + b.available_copies, 0);
   const memberName = (id: string) => {
     const m = members.find((x) => x.id === id);
-    return m?.full_name || m?.email || "Member";
+    return m?.full_name || m?.email || "College Member";
   };
 
-  const stats = [
-    { label: "Titles", value: books.length },
-    { label: "Copies on shelf", value: `${availableCopies}/${totalCopies}` },
-    { label: "Issued now", value: activeIssues.length },
-    { label: "Overdue", value: overdueIssues.length },
-    { label: "Members", value: members.length },
+  const adminStats = [
+    { label: "Book Titles", value: books.length, icon: BookOpen, color: "text-[#6C4AB6]", bg: "bg-[#F0EBFA]" },
+    {
+      label: "Copies on Shelf",
+      value: `${availableCopies} / ${totalCopies}`,
+      icon: Layers,
+      color: "text-emerald-600",
+      bg: "bg-emerald-50",
+    },
+    {
+      label: "Active Loans",
+      value: activeIssues.length,
+      icon: Clock,
+      color: "text-blue-600",
+      bg: "bg-blue-50",
+    },
+    {
+      label: "Overdue Loans",
+      value: overdueIssues.length,
+      icon: AlertTriangle,
+      color: overdueIssues.length > 0 ? "text-[#DC2626]" : "text-slate-600",
+      bg: overdueIssues.length > 0 ? "bg-rose-50" : "bg-slate-100",
+    },
+    { label: "Total Members", value: members.length, icon: Users, color: "text-purple-600", bg: "bg-purple-50" },
   ];
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-[#F5F6FA] text-[#1F2937]">
       <SiteNav />
-      <main className="mx-auto max-w-6xl px-4 py-12">
-        <h1 className="text-3xl font-semibold md:text-4xl">Librarian dashboard</h1>
-        <p className="mt-2 text-muted-foreground">Inventory, circulation, and members at a glance.</p>
 
-        <div className="mt-8 grid gap-4 sm:grid-cols-3 lg:grid-cols-5">
-          {stats.map((s) => (
-            <Card key={s.label} className="surface-paper">
-              <CardContent className="pt-6">
-                <p className="text-xs uppercase tracking-wide text-muted-foreground">{s.label}</p>
-                <p className="font-display text-2xl font-semibold">{s.value}</p>
-              </CardContent>
-            </Card>
-          ))}
+      {/* Header Banner */}
+      <section className="border-b border-[#E2E8F0] bg-white py-8 shadow-xs">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[#6C4AB6]">
+                <Shield className="size-4" /> Administration Portal
+              </div>
+              <h1 className="mt-1 font-display text-3xl font-bold tracking-tight text-[#14213D] sm:text-4xl">
+                Librarian Dashboard
+              </h1>
+              <p className="mt-1 text-sm text-[#64748B]">
+                Manage catalog inventory, record new titles, process member loans, and monitor circulation activity.
+              </p>
+            </div>
+
+            <Badge className="bg-[#14213D] text-white border-none text-xs px-3 py-1 font-semibold self-start sm:self-auto">
+              Staff Privileges Active
+            </Badge>
+          </div>
+        </div>
+      </section>
+
+      <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 space-y-8">
+        {/* Metric Cards */}
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+          {adminStats.map((s) => {
+            const IconComp = s.icon;
+            return (
+              <Card key={s.label} className="rounded-2xl border border-[#E2E8F0] bg-white p-5 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold uppercase tracking-wider text-[#64748B]">{s.label}</span>
+                  <div className={`flex size-8 items-center justify-center rounded-lg ${s.bg} ${s.color}`}>
+                    <IconComp className="size-4" />
+                  </div>
+                </div>
+                <p className="font-display text-2xl font-bold text-[#14213D] mt-3">{s.value}</p>
+              </Card>
+            );
+          })}
         </div>
 
-        <Tabs defaultValue="inventory" className="mt-10">
-          <TabsList>
-            <TabsTrigger value="inventory">Inventory</TabsTrigger>
-            <TabsTrigger value="loans">Loans ({activeIssues.length})</TabsTrigger>
-            <TabsTrigger value="members">Members ({members.length})</TabsTrigger>
+        {/* Administration Tabs */}
+        <Tabs defaultValue="inventory" className="w-full">
+          <TabsList className="grid w-full grid-cols-3 max-w-md rounded-xl bg-slate-100 p-1 mb-8">
+            <TabsTrigger
+              value="inventory"
+              className="rounded-lg text-xs font-semibold text-[#64748B] data-[state=active]:bg-white data-[state=active]:text-[#14213D] data-[state=active]:shadow-xs transition-all"
+            >
+              Inventory ({books.length})
+            </TabsTrigger>
+            <TabsTrigger
+              value="loans"
+              className="rounded-lg text-xs font-semibold text-[#64748B] data-[state=active]:bg-white data-[state=active]:text-[#14213D] data-[state=active]:shadow-xs transition-all"
+            >
+              Loans ({activeIssues.length})
+            </TabsTrigger>
+            <TabsTrigger
+              value="members"
+              className="rounded-lg text-xs font-semibold text-[#64748B] data-[state=active]:bg-white data-[state=active]:text-[#14213D] data-[state=active]:shadow-xs transition-all"
+            >
+              Members ({members.length})
+            </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="inventory" className="mt-6 space-y-8">
-            <Card className="surface-paper">
-              <CardHeader>
-                <CardTitle className="font-display text-xl">Add a book</CardTitle>
+          {/* TAB 1: INVENTORY MANAGEMENT */}
+          <TabsContent value="inventory" className="space-y-8">
+            {/* Add Book Form Card */}
+            <Card className="rounded-2xl border border-[#E2E8F0] bg-white shadow-sm overflow-hidden">
+              <CardHeader className="border-b border-[#F1F5F9] pb-4">
+                <div className="flex items-center gap-2.5">
+                  <span className="flex size-9 items-center justify-center rounded-lg bg-[#F0EBFA] text-[#6C4AB6]">
+                    <PlusCircle className="size-5" />
+                  </span>
+                  <div>
+                    <CardTitle className="font-display text-lg font-bold text-[#14213D]">
+                      Add New Book to Catalog
+                    </CardTitle>
+                    <CardDescription className="text-xs text-[#64748B]">
+                      Enter book metadata. ISBN allows automated cover fetching from Open Library.
+                    </CardDescription>
+                  </div>
+                </div>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-6">
                 <form
-                  className="grid gap-4 md:grid-cols-2"
+                  className="grid gap-5 md:grid-cols-2"
                   onSubmit={(e) => {
                     e.preventDefault();
                     addBook.mutate();
                   }}
                 >
-                  <div className="space-y-2">
-                    <Label htmlFor="title">Title</Label>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="title" className="text-xs font-bold text-[#14213D]">
+                      Book Title *
+                    </Label>
                     <Input
                       id="title"
                       required
-                      placeholder="e.g. Thinking, Fast and Slow"
+                      placeholder="e.g. Introduction to Algorithms"
+                      className="h-10 bg-white border-[#E2E8F0] text-xs rounded-xl focus-visible:ring-2 focus-visible:ring-[#6C4AB6]"
                       value={form.title}
                       onChange={(e) => setForm({ ...form, title: e.target.value })}
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="author">Author</Label>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="author" className="text-xs font-bold text-[#14213D]">
+                      Author Name *
+                    </Label>
                     <Input
                       id="author"
                       required
-                      placeholder="e.g. Daniel Kahneman"
+                      placeholder="e.g. Thomas H. Cormen"
+                      className="h-10 bg-white border-[#E2E8F0] text-xs rounded-xl focus-visible:ring-2 focus-visible:ring-[#6C4AB6]"
                       value={form.author}
                       onChange={(e) => setForm({ ...form, author: e.target.value })}
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="category">Category</Label>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="category" className="text-xs font-bold text-[#14213D]">
+                      Category / Department
+                    </Label>
                     <Input
                       id="category"
                       list="category-options"
-                      placeholder="e.g. Psychology"
+                      placeholder="e.g. Computer Science"
+                      className="h-10 bg-white border-[#E2E8F0] text-xs rounded-xl focus-visible:ring-2 focus-visible:ring-[#6C4AB6]"
                       value={form.category}
                       onChange={(e) => setForm({ ...form, category: e.target.value })}
                     />
@@ -304,123 +442,187 @@ function AdminPage() {
                       ))}
                     </datalist>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="isbn">ISBN</Label>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="isbn" className="text-xs font-bold text-[#14213D]">
+                      ISBN-10 / ISBN-13
+                    </Label>
                     <Input
                       id="isbn"
-                      placeholder="e.g. 9780374533557"
+                      placeholder="e.g. 9780262046305"
+                      className="h-10 bg-white border-[#E2E8F0] text-xs rounded-xl focus-visible:ring-2 focus-visible:ring-[#6C4AB6]"
                       value={form.isbn}
                       onChange={(e) => setForm({ ...form, isbn: e.target.value })}
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="cover_url">Cover Image URL (optional)</Label>
-                    <Input
-                      id="cover_url"
-                      placeholder="Leave blank to auto-fetch from Open Library"
-                      value={form.cover_url}
-                      onChange={(e) => setForm({ ...form, cover_url: e.target.value })}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="copies">Total copies</Label>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="copies" className="text-xs font-bold text-[#14213D]">
+                      Total Copies in Library
+                    </Label>
                     <Input
                       id="copies"
                       type="number"
                       min={1}
+                      className="h-10 bg-white border-[#E2E8F0] text-xs rounded-xl focus-visible:ring-2 focus-visible:ring-[#6C4AB6]"
                       value={form.total_copies}
                       onChange={(e) => setForm({ ...form, total_copies: e.target.value })}
                     />
                   </div>
-                  <div className="space-y-2 md:col-span-2">
-                    <Label htmlFor="description">Description</Label>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="cover_url" className="text-xs font-bold text-[#14213D]">
+                      Custom Cover URL (optional)
+                    </Label>
+                    <Input
+                      id="cover_url"
+                      placeholder="Leave blank to auto-fetch from ISBN"
+                      className="h-10 bg-white border-[#E2E8F0] text-xs rounded-xl focus-visible:ring-2 focus-visible:ring-[#6C4AB6]"
+                      value={form.cover_url}
+                      onChange={(e) => setForm({ ...form, cover_url: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="space-y-1.5 md:col-span-2">
+                    <Label htmlFor="description" className="text-xs font-bold text-[#14213D]">
+                      Book Summary / Synopsis
+                    </Label>
                     <Textarea
                       id="description"
-                      rows={3}
-                      placeholder="Overview or summary of the book..."
+                      rows={2}
+                      placeholder="Brief overview of the book's subject matter..."
+                      className="bg-white border-[#E2E8F0] text-xs rounded-xl focus-visible:ring-2 focus-visible:ring-[#6C4AB6]"
                       value={form.description}
                       onChange={(e) => setForm({ ...form, description: e.target.value })}
                     />
                   </div>
-                  <div className="md:col-span-2">
-                    <Button type="submit" disabled={addBook.isPending}>
-                      Add to catalog
+
+                  <div className="md:col-span-2 pt-2">
+                    <Button
+                      type="submit"
+                      disabled={addBook.isPending}
+                      className="bg-[#6C4AB6] hover:bg-[#8B5CF6] text-white text-xs font-semibold px-6 shadow-xs"
+                    >
+                      {addBook.isPending ? "Adding Title..." : "Add Title to Catalog"}
                     </Button>
                   </div>
                 </form>
               </CardContent>
             </Card>
 
-            <div className="surface-paper overflow-x-auto rounded-lg">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Book</TableHead>
-                    <TableHead>Category</TableHead>
-                    <TableHead>ISBN</TableHead>
-                    <TableHead>Available</TableHead>
-                    <TableHead className="text-right">Remove</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {books.map((b) => (
-                    <TableRow key={b.id}>
-                      <TableCell>
-                        <div className="flex items-center gap-3">
-                          {b.cover_url ? (
-                            <img
-                              src={b.cover_url}
-                              alt={b.title}
-                              className="h-12 w-9 rounded object-cover shadow-sm bg-muted flex-shrink-0"
-                              onError={(e) => {
-                                (e.currentTarget as HTMLImageElement).style.display = "none";
-                              }}
-                            />
-                          ) : (
-                            <div className="flex h-12 w-9 items-center justify-center rounded bg-primary/10 text-primary flex-shrink-0">
-                              <BookOpen className="size-4" />
-                            </div>
-                          )}
-                          <div>
-                            <p className="font-medium">{b.title}</p>
-                            <p className="text-xs text-muted-foreground">{b.author}</p>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="secondary">{b.category}</Badge>
-                      </TableCell>
-                      <TableCell className="text-xs font-mono text-muted-foreground">{b.isbn || "—"}</TableCell>
-                      <TableCell>
-                        <Badge variant={b.available_copies > 0 ? "outline" : "destructive"}>
-                          {b.available_copies}/{b.total_copies} available
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          aria-label={`Remove ${b.title}`}
-                          onClick={() => removeBook.mutate(b.id)}
-                        >
-                          <Trash2 className="size-4" />
-                        </Button>
-                      </TableCell>
+            {/* Inventory Table */}
+            <div className="space-y-3">
+              <h3 className="font-display text-lg font-bold text-[#14213D]">
+                Catalog Inventory ({books.length} Books)
+              </h3>
+              <div className="overflow-hidden rounded-2xl border border-[#E2E8F0] bg-white shadow-sm">
+                <Table>
+                  <TableHeader className="bg-slate-50/80">
+                    <TableRow className="border-[#E2E8F0]">
+                      <TableHead className="text-xs font-bold uppercase tracking-wider text-[#14213D]">
+                        Book
+                      </TableHead>
+                      <TableHead className="text-xs font-bold uppercase tracking-wider text-[#14213D]">
+                        Category
+                      </TableHead>
+                      <TableHead className="text-xs font-bold uppercase tracking-wider text-[#14213D]">
+                        ISBN
+                      </TableHead>
+                      <TableHead className="text-xs font-bold uppercase tracking-wider text-[#14213D]">
+                        Availability
+                      </TableHead>
+                      <TableHead className="text-right text-xs font-bold uppercase tracking-wider text-[#14213D]">
+                        Action
+                      </TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {books.map((b) => (
+                      <TableRow key={b.id} className="border-[#E2E8F0] hover:bg-slate-50/60 transition-colors">
+                        <TableCell className="py-3">
+                          <div className="flex items-center gap-3">
+                            {b.cover_url ? (
+                              <img
+                                src={b.cover_url}
+                                alt={b.title}
+                                className="h-12 w-9 rounded object-cover shadow-xs border border-[#E2E8F0] bg-slate-100 flex-shrink-0"
+                                onError={(e) => {
+                                  (e.currentTarget as HTMLImageElement).style.display = "none";
+                                }}
+                              />
+                            ) : (
+                              <div className="flex h-12 w-9 items-center justify-center rounded bg-[#F0EBFA] text-[#6C4AB6] border border-[#DDD6FE] flex-shrink-0">
+                                <BookOpen className="size-4" />
+                              </div>
+                            )}
+                            <div>
+                              <p className="font-bold text-[#14213D] leading-snug">{b.title}</p>
+                              <p className="text-xs text-[#64748B]">{b.author}</p>
+                            </div>
+                          </div>
+                        </TableCell>
+
+                        <TableCell>
+                          <Badge className="bg-[#F0EBFA] text-[#6C4AB6] border-[#DDD6FE] text-xs font-medium">
+                            {b.category}
+                          </Badge>
+                        </TableCell>
+
+                        <TableCell className="text-xs font-mono text-[#64748B]">
+                          {b.isbn || "—"}
+                        </TableCell>
+
+                        <TableCell>
+                          <Badge
+                            className={`text-xs font-semibold ${
+                              b.available_copies > 0
+                                ? "bg-emerald-50 text-[#15803D] border-emerald-200"
+                                : "bg-rose-50 text-[#DC2626] border-rose-200"
+                            }`}
+                          >
+                            {b.available_copies} of {b.total_copies} available
+                          </Badge>
+                        </TableCell>
+
+                        <TableCell className="text-right">
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="text-slate-400 hover:text-[#DC2626] hover:bg-rose-50 size-8"
+                            aria-label={`Remove ${b.title}`}
+                            onClick={() => removeBook.mutate(b.id)}
+                          >
+                            <Trash2 className="size-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             </div>
           </TabsContent>
 
-          <TabsContent value="loans" className="mt-6 space-y-6">
-            <Card className="surface-paper">
-              <CardHeader>
-                <CardTitle className="font-display text-xl flex items-center gap-2">
-                  <Send className="size-5" /> Issue Book to Member
-                </CardTitle>
+          {/* TAB 2: LOANS & ISSUE TO MEMBER */}
+          <TabsContent value="loans" className="space-y-8">
+            {/* Quick Issue to Member Form */}
+            <Card className="rounded-2xl border border-[#E2E8F0] bg-white shadow-sm overflow-hidden">
+              <CardHeader className="border-b border-[#F1F5F9] pb-4">
+                <div className="flex items-center gap-2.5">
+                  <span className="flex size-9 items-center justify-center rounded-lg bg-[#F0EBFA] text-[#6C4AB6]">
+                    <Send className="size-5" />
+                  </span>
+                  <div>
+                    <CardTitle className="font-display text-lg font-bold text-[#14213D]">
+                      Issue Book to Registered Member
+                    </CardTitle>
+                    <CardDescription className="text-xs text-[#64748B]">
+                      Directly assign a copy to a student. Loan automatically calculates a 14-day due date.
+                    </CardDescription>
+                  </div>
+                </div>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-6">
                 <form
                   className="grid gap-4 md:grid-cols-3"
                   onSubmit={(e) => {
@@ -428,16 +630,18 @@ function AdminPage() {
                     issueToMemberMutation.mutate();
                   }}
                 >
-                  <div className="space-y-2">
-                    <Label htmlFor="issue-book">Select Book</Label>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="issue-book" className="text-xs font-bold text-[#14213D]">
+                      Select Book Title *
+                    </Label>
                     <select
                       id="issue-book"
                       required
-                      className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                      className="w-full h-10 rounded-xl border border-[#E2E8F0] bg-white text-[#1F2937] px-3 text-xs shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6C4AB6]"
                       value={manualIssue.bookId}
                       onChange={(e) => setManualIssue({ ...manualIssue, bookId: e.target.value })}
                     >
-                      <option value="">-- Choose a book --</option>
+                      <option value="">-- Choose a book title --</option>
                       {books.map((b) => (
                         <option key={b.id} value={b.id} disabled={b.available_copies < 1}>
                           {b.title} ({b.author}) — {b.available_copies} available
@@ -445,12 +649,15 @@ function AdminPage() {
                       ))}
                     </select>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="issue-member">Select Member</Label>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="issue-member" className="text-xs font-bold text-[#14213D]">
+                      Select College Member *
+                    </Label>
                     <select
                       id="issue-member"
                       required
-                      className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                      className="w-full h-10 rounded-xl border border-[#E2E8F0] bg-white text-[#1F2937] px-3 text-xs shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6C4AB6]"
                       value={manualIssue.memberId}
                       onChange={(e) => setManualIssue({ ...manualIssue, memberId: e.target.value })}
                     >
@@ -462,124 +669,187 @@ function AdminPage() {
                       ))}
                     </select>
                   </div>
+
                   <div className="flex items-end">
-                    <Button type="submit" className="w-full" disabled={issueToMemberMutation.isPending}>
-                      Issue Book (14 Days)
+                    <Button
+                      type="submit"
+                      className="w-full h-10 bg-[#6C4AB6] hover:bg-[#8B5CF6] text-white font-semibold text-xs shadow-xs"
+                      disabled={issueToMemberMutation.isPending}
+                    >
+                      {issueToMemberMutation.isPending ? "Issuing..." : "Issue Book (14 Days)"}
                     </Button>
                   </div>
                 </form>
               </CardContent>
             </Card>
 
-            <div className="surface-paper overflow-x-auto rounded-lg">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Book</TableHead>
-                    <TableHead>Member</TableHead>
-                    <TableHead>Issued</TableHead>
-                    <TableHead>Due</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Action</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {issues.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={6} className="text-muted-foreground text-center py-8">
-                        No loans recorded yet.
-                      </TableCell>
+            {/* Active & Past Loans Table */}
+            <div className="space-y-3">
+              <h3 className="font-display text-lg font-bold text-[#14213D]">
+                All Recorded Loans ({issues.length})
+              </h3>
+              <div className="overflow-hidden rounded-2xl border border-[#E2E8F0] bg-white shadow-sm">
+                <Table>
+                  <TableHeader className="bg-slate-50/80">
+                    <TableRow className="border-[#E2E8F0]">
+                      <TableHead className="text-xs font-bold uppercase tracking-wider text-[#14213D]">
+                        Book Details
+                      </TableHead>
+                      <TableHead className="text-xs font-bold uppercase tracking-wider text-[#14213D]">
+                        Borrower
+                      </TableHead>
+                      <TableHead className="text-xs font-bold uppercase tracking-wider text-[#14213D]">
+                        Issued On
+                      </TableHead>
+                      <TableHead className="text-xs font-bold uppercase tracking-wider text-[#14213D]">
+                        Due Date
+                      </TableHead>
+                      <TableHead className="text-xs font-bold uppercase tracking-wider text-[#14213D]">
+                        Status
+                      </TableHead>
+                      <TableHead className="text-right text-xs font-bold uppercase tracking-wider text-[#14213D]">
+                        Staff Action
+                      </TableHead>
                     </TableRow>
-                  ) : (
-                    issues.map((i) => {
-                      const left = daysUntil(i.due_date);
-                      const title = i.books?.title || "Library Book";
-                      const author = i.books?.author || "Catalog Title";
-                      const coverUrl = i.books?.cover_url;
+                  </TableHeader>
+                  <TableBody>
+                    {issues.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={6} className="text-center py-10 text-xs text-[#64748B]">
+                          No loans recorded in the system yet.
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      issues.map((i) => {
+                        const left = daysUntil(i.due_date);
+                        const title = i.books?.title || "Library Book";
+                        const author = i.books?.author || "Catalog Title";
+                        const coverUrl = i.books?.cover_url;
 
-                      return (
-                        <TableRow key={i.id}>
-                          <TableCell>
-                            <div className="flex items-center gap-3">
-                              {coverUrl ? (
-                                <img
-                                  src={coverUrl}
-                                  alt={title}
-                                  className="h-12 w-9 rounded object-cover shadow-sm bg-muted flex-shrink-0"
-                                  onError={(e) => {
-                                    (e.currentTarget as HTMLImageElement).style.display = "none";
-                                  }}
-                                />
-                              ) : (
-                                <div className="flex h-12 w-9 items-center justify-center rounded bg-primary/10 text-primary flex-shrink-0">
-                                  <BookOpen className="size-4" />
+                        return (
+                          <TableRow key={i.id} className="border-[#E2E8F0] hover:bg-slate-50/60 transition-colors">
+                            <TableCell className="py-3">
+                              <div className="flex items-center gap-3">
+                                {coverUrl ? (
+                                  <img
+                                    src={coverUrl}
+                                    alt={title}
+                                    className="h-12 w-9 rounded object-cover shadow-xs border border-[#E2E8F0] bg-slate-100 flex-shrink-0"
+                                    onError={(e) => {
+                                      (e.currentTarget as HTMLImageElement).style.display = "none";
+                                    }}
+                                  />
+                                ) : (
+                                  <div className="flex h-12 w-9 items-center justify-center rounded bg-[#F0EBFA] text-[#6C4AB6] border border-[#DDD6FE] flex-shrink-0">
+                                    <BookOpen className="size-4" />
+                                  </div>
+                                )}
+                                <div>
+                                  <p className="font-bold text-[#14213D] leading-snug">{title}</p>
+                                  <p className="text-xs text-[#64748B]">{author}</p>
                                 </div>
-                              )}
-                              <div>
-                                <p className="font-medium">{title}</p>
-                                <p className="text-xs text-muted-foreground">{author}</p>
                               </div>
-                            </div>
-                          </TableCell>
-                          <TableCell className="font-medium">{memberName(i.user_id)}</TableCell>
-                          <TableCell>{formatDate(i.issued_at)}</TableCell>
-                          <TableCell>{formatDate(i.due_date)}</TableCell>
-                          <TableCell>
-                            {i.status === "returned" ? (
-                              <Badge variant="outline" className="flex items-center gap-1 w-fit">
-                                <CheckCircle className="size-3 text-emerald-500" /> Returned {formatDate(i.returned_at)}
-                              </Badge>
-                            ) : left < 0 ? (
-                              <Badge variant="destructive">{Math.abs(left)} days overdue</Badge>
-                            ) : (
-                              <Badge variant="secondary">{left} days left</Badge>
-                            )}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            {i.status === "issued" && (
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                disabled={forceReturn.isPending}
-                                onClick={() => forceReturn.mutate({ id: i.id, bookId: i.book_id })}
-                              >
-                                Mark returned
-                              </Button>
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })
-                  )}
-                </TableBody>
-              </Table>
+                            </TableCell>
+
+                            <TableCell className="text-xs font-semibold text-[#14213D]">
+                              {memberName(i.user_id)}
+                            </TableCell>
+
+                            <TableCell className="text-xs text-[#64748B]">{formatDate(i.issued_at)}</TableCell>
+                            <TableCell className="text-xs text-[#64748B]">{formatDate(i.due_date)}</TableCell>
+
+                            <TableCell>
+                              {i.status === "returned" ? (
+                                <Badge className="bg-emerald-50 text-[#15803D] border-emerald-200 text-xs font-semibold">
+                                  <CheckCircle className="size-3 mr-1" /> Returned
+                                </Badge>
+                              ) : left < 0 ? (
+                                <Badge className="bg-rose-50 text-[#B91C1C] border-rose-200 text-xs font-semibold">
+                                  <AlertTriangle className="size-3 mr-1 text-[#B91C1C]" /> {Math.abs(left)} days overdue
+                                </Badge>
+                              ) : (
+                                <Badge className="bg-[#F0EBFA] text-[#6C4AB6] border-[#DDD6FE] text-xs font-semibold">
+                                  <Clock className="size-3 mr-1" /> {left} days left
+                                </Badge>
+                              )}
+                            </TableCell>
+
+                            <TableCell className="text-right">
+                              {i.status === "issued" && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="border-[#1D3557] text-[#1D3557] hover:bg-slate-50 text-xs font-semibold"
+                                  disabled={forceReturn.isPending}
+                                  onClick={() => forceReturn.mutate({ id: i.id, bookId: i.book_id })}
+                                >
+                                  Mark Returned
+                                </Button>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
             </div>
           </TabsContent>
 
-          <TabsContent value="members" className="mt-6">
-            <div className="surface-paper overflow-x-auto rounded-lg">
+          {/* TAB 3: MEMBER MANAGEMENT */}
+          <TabsContent value="members" className="space-y-4">
+            <h3 className="font-display text-lg font-bold text-[#14213D]">
+              Registered Members ({members.length})
+            </h3>
+            <div className="overflow-hidden rounded-2xl border border-[#E2E8F0] bg-white shadow-sm">
               <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Role</TableHead>
-                    <TableHead>Joined</TableHead>
-                    <TableHead>Active loans</TableHead>
+                <TableHeader className="bg-slate-50/80">
+                  <TableRow className="border-[#E2E8F0]">
+                    <TableHead className="text-xs font-bold uppercase tracking-wider text-[#14213D]">
+                      Member Name
+                    </TableHead>
+                    <TableHead className="text-xs font-bold uppercase tracking-wider text-[#14213D]">
+                      College Email
+                    </TableHead>
+                    <TableHead className="text-xs font-bold uppercase tracking-wider text-[#14213D]">
+                      Role
+                    </TableHead>
+                    <TableHead className="text-xs font-bold uppercase tracking-wider text-[#14213D]">
+                      Joined Date
+                    </TableHead>
+                    <TableHead className="text-right text-xs font-bold uppercase tracking-wider text-[#14213D]">
+                      Active Loans
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {members.map((m) => (
-                    <TableRow key={m.id}>
-                      <TableCell className="font-medium">{m.full_name || "—"}</TableCell>
-                      <TableCell>{m.email}</TableCell>
-                      <TableCell>
-                        <Badge variant={m.role === "librarian" ? "default" : "secondary"}>{m.role}</Badge>
-                      </TableCell>
-                      <TableCell>{formatDate(m.created_at)}</TableCell>
-                      <TableCell>{activeIssues.filter((i) => i.user_id === m.id).length}</TableCell>
-                    </TableRow>
-                  ))}
+                  {members.map((m) => {
+                    const memberActiveLoans = activeIssues.filter((i) => i.user_id === m.id).length;
+                    return (
+                      <TableRow key={m.id} className="border-[#E2E8F0] hover:bg-slate-50/60 transition-colors">
+                        <TableCell className="font-bold text-[#14213D] py-3.5">
+                          {m.full_name || "College User"}
+                        </TableCell>
+                        <TableCell className="text-xs text-[#64748B]">{m.email}</TableCell>
+                        <TableCell>
+                          <Badge
+                            className={
+                              m.role === "librarian"
+                                ? "bg-purple-100 text-[#6C4AB6] border-purple-200 text-xs font-semibold uppercase tracking-wider"
+                                : "bg-blue-50 text-[#1D3557] border-blue-200 text-xs font-semibold uppercase tracking-wider"
+                            }
+                          >
+                            {m.role}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-xs text-[#64748B]">{formatDate(m.created_at)}</TableCell>
+                        <TableCell className="text-right font-bold text-[#14213D] text-xs">
+                          {memberActiveLoans}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </div>

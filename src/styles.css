@@ -5,8 +5,22 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Smart-Shelf design system — vivid purple, soft lavender, crisp white.
- * All colors are oklch semantic tokens. Never hardcode colors in components.
+ * Smart-Shelf College Library Management System Design System
+ * 
+ * Palette:
+ * - Primary Dark Navy:   #14213D
+ * - Secondary Navy:      #1D3557
+ * - Primary Purple:      #6C4AB6
+ * - Secondary Violet:    #8B5CF6
+ * - White:               #FFFFFF
+ * - Light Background:    #F5F6FA
+ * - Light Purple:        #F0EBFA
+ * - Primary Text:        #1F2937
+ * - Secondary Text:      #64748B
+ * - Border Color:        #E2E8F0
+ * - Success:             #15803D
+ * - Warning:             #D97706
+ * - Error:               #DC2626
  */
 
 @theme inline {
@@ -18,6 +32,7 @@
   --radius-xl: calc(var(--radius) + 4px);
   --radius-2xl: calc(var(--radius) + 8px);
   --radius-3xl: calc(var(--radius) + 12px);
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -42,100 +57,63 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
   --color-ring-offset-background: var(--background);
-  --color-chart-1: var(--chart-1);
-  --color-chart-2: var(--chart-2);
-  --color-chart-3: var(--chart-3);
-  --color-chart-4: var(--chart-4);
-  --color-chart-5: var(--chart-5);
-  --color-sidebar: var(--sidebar);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-ring: var(--sidebar-ring);
-  --shadow-shelf: 0 1px 0 0 oklch(0.35 0.03 300 / 0.06), 0 12px 30px -18px oklch(0.28 0.04 300 / 0.32);
-  --shadow-lift: 0 20px 45px -25px oklch(0.28 0.04 300 / 0.42);
+
+  /* Named brand color tokens */
+  --color-navy-dark: #14213D;
+  --color-navy-secondary: #1D3557;
+  --color-purple-primary: #6C4AB6;
+  --color-purple-secondary: #8B5CF6;
+  --color-purple-light: #F0EBFA;
+  --color-text-primary: #1F2937;
+  --color-text-secondary: #64748B;
+  --color-status-success: #15803D;
+  --color-status-warning: #D97706;
+  --color-status-error: #DC2626;
+
+  --shadow-shelf: 0 4px 20px -2px rgba(20, 33, 61, 0.08), 0 2px 6px -1px rgba(20, 33, 61, 0.04);
+  --shadow-lift: 0 16px 36px -8px rgba(20, 33, 61, 0.12), 0 4px 12px -2px rgba(20, 33, 61, 0.06);
 }
 
 :root {
-  --radius: 0.5rem;
-  --background: oklch(0.985 0.008 300);
-  --foreground: oklch(0.20 0.045 300);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.20 0.045 300);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.20 0.045 300);
-  --primary: oklch(0.43 0.18 300);
-  --primary-foreground: oklch(0.99 0.004 300);
-  --secondary: oklch(0.93 0.035 300);
-  --secondary-foreground: oklch(0.24 0.055 300);
-  --muted: oklch(0.95 0.018 300);
-  --muted-foreground: oklch(0.46 0.045 300);
-  --accent: oklch(0.82 0.09 300);
-  --accent-foreground: oklch(0.22 0.06 300);
-  --destructive: oklch(0.55 0.19 27);
-  --destructive-foreground: oklch(0.98 0.01 90);
-  --success: oklch(0.6 0.13 155);
-  --success-foreground: oklch(0.99 0.01 90);
-  --warning: oklch(0.75 0.15 65);
-  --warning-foreground: oklch(0.26 0.045 60);
-  --border: oklch(0.87 0.025 300);
-  --input: oklch(0.87 0.025 300);
-  --ring: oklch(0.52 0.16 300);
-  --chart-1: oklch(0.52 0.16 300);
-  --chart-2: oklch(0.68 0.12 320);
-  --chart-3: oklch(0.55 0.19 27);
-  --chart-4: oklch(0.6 0.13 155);
-  --chart-5: oklch(0.50 0.03 300);
-  --sidebar: oklch(0.96 0.018 300);
-  --sidebar-foreground: oklch(0.20 0.045 300);
-  --sidebar-primary: oklch(0.43 0.18 300);
-  --sidebar-primary-foreground: oklch(0.99 0.004 300);
-  --sidebar-accent: oklch(0.93 0.035 300);
-  --sidebar-accent-foreground: oklch(0.24 0.055 300);
-  --sidebar-border: oklch(0.87 0.025 300);
-  --sidebar-ring: oklch(0.52 0.16 300);
-}
+  --radius: 0.625rem;
+  --background: #F5F6FA;
+  --foreground: #1F2937;
+  --card: #FFFFFF;
+  --card-foreground: #1F2937;
+  --popover: #FFFFFF;
+  --popover-foreground: #1F2937;
+  --primary: #6C4AB6;
+  --primary-foreground: #FFFFFF;
+  --secondary: #F0EBFA;
+  --secondary-foreground: #6C4AB6;
+  --muted: #F1F5F9;
+  --muted-foreground: #64748B;
+  --accent: #F0EBFA;
+  --accent-foreground: #14213D;
+  --destructive: #DC2626;
+  --destructive-foreground: #FFFFFF;
+  --success: #15803D;
+  --success-foreground: #FFFFFF;
+  --warning: #D97706;
+  --warning-foreground: #FFFFFF;
+  --border: #E2E8F0;
+  --input: #E2E8F0;
+  --ring: #6C4AB6;
 
-.dark {
-  --background: oklch(0.18 0.045 300);
-  --foreground: oklch(0.96 0.012 300);
-  --card: oklch(0.24 0.05 300);
-  --card-foreground: oklch(0.96 0.012 300);
-  --popover: oklch(0.24 0.05 300);
-  --popover-foreground: oklch(0.96 0.012 300);
-  --primary: oklch(0.74 0.13 300);
-  --primary-foreground: oklch(0.16 0.05 300);
-  --secondary: oklch(0.31 0.055 300);
-  --secondary-foreground: oklch(0.95 0.015 300);
-  --muted: oklch(0.30 0.045 300);
-  --muted-foreground: oklch(0.73 0.035 300);
-  --accent: oklch(0.72 0.12 310);
-  --accent-foreground: oklch(0.18 0.05 300);
-  --destructive: oklch(0.66 0.18 27);
-  --destructive-foreground: oklch(0.98 0.01 90);
-  --success: oklch(0.7 0.13 155);
-  --success-foreground: oklch(0.19 0.021 158);
-  --warning: oklch(0.8 0.14 70);
-  --warning-foreground: oklch(0.22 0.04 60);
-  --border: oklch(1 0 0 / 12%);
-  --input: oklch(1 0 0 / 16%);
-  --ring: oklch(0.74 0.13 300);
-  --chart-1: oklch(0.74 0.13 300);
-  --chart-2: oklch(0.78 0.13 320);
-  --chart-3: oklch(0.66 0.18 27);
-  --chart-4: oklch(0.7 0.13 155);
-  --chart-5: oklch(0.72 0.02 300);
-  --sidebar: oklch(0.24 0.05 300);
-  --sidebar-foreground: oklch(0.96 0.012 300);
-  --sidebar-primary: oklch(0.74 0.13 300);
-  --sidebar-primary-foreground: oklch(0.16 0.05 300);
-  --sidebar-accent: oklch(0.31 0.055 300);
-  --sidebar-accent-foreground: oklch(0.95 0.015 300);
-  --sidebar-border: oklch(1 0 0 / 12%);
-  --sidebar-ring: oklch(0.65 0.10 255);
+  --chart-1: #6C4AB6;
+  --chart-2: #8B5CF6;
+  --chart-3: #1D3557;
+  --chart-4: #15803D;
+  --chart-5: #D97706;
+
+  --sidebar: #14213D;
+  --sidebar-foreground: #FFFFFF;
+  --sidebar-primary: #6C4AB6;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #1D3557;
+  --sidebar-accent-foreground: #FFFFFF;
+  --sidebar-border: rgba(255, 255, 255, 0.15);
+  --sidebar-ring: #8B5CF6;
 }
 
 @layer base {
@@ -148,20 +126,8 @@
     color: var(--color-foreground);
     font-family: var(--font-sans);
     min-height: 100vh;
-    background-image:
-      linear-gradient(to bottom, rgba(15, 23, 42, 0.40), rgba(15, 23, 42, 0.60)),
-      url("https://images.unsplash.com/photo-1521587760476-6c12a4b040da?auto=format&fit=crop&w=2400&q=85");
-    background-attachment: fixed;
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-  }
-
-  .dark body,
-  body:is(.dark *) {
-    background-image:
-      linear-gradient(to bottom, rgba(10, 15, 30, 0.70), rgba(10, 15, 30, 0.85)),
-      url("https://images.unsplash.com/photo-1521587760476-6c12a4b040da?auto=format&fit=crop&w=2400&q=85");
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   h1,
@@ -170,23 +136,30 @@
   .font-display {
     font-family: var(--font-display);
     letter-spacing: -0.02em;
+    color: #14213D;
   }
 }
 
+/* Reusable card surfaces */
 @utility surface-paper {
-  background-color: color-mix(in oklch, var(--color-card) 95%, transparent);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border: 1px solid color-mix(in oklch, var(--color-border) 80%, transparent);
-  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.15), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  background-color: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 4px 18px -2px rgba(20, 33, 61, 0.05), 0 1px 4px -1px rgba(20, 33, 61, 0.03);
+  color: #1F2937;
+}
+
+@utility glass-card-dark {
+  background-color: rgba(20, 33, 61, 0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 20px 48px -12px rgba(10, 15, 30, 0.6);
+  color: #FFFFFF;
 }
 
 @utility text-gradient-shelf {
-  background-image: linear-gradient(
-    100deg,
-    var(--color-primary),
-    color-mix(in oklch, var(--color-accent) 70%, var(--color-primary))
-  );
+  background-image: linear-gradient(110deg, #6C4AB6 0%, #8B5CF6 100%);
   background-clip: text;
+  -webkit-background-clip: text;
   color: transparent;
 }

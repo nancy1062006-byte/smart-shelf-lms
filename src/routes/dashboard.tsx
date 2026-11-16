@@ -1,6 +1,17 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
+import {
+  BookOpen,
+  Calendar,
+  Clock,
+  CheckCircle2,
+  AlertTriangle,
+  User,
+  ArrowRight,
+  Shield,
+  History,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { daysUntil, formatDate, useSession } from "@/lib/session";
 import { fetchMergedIssues, type IssueRecord } from "@/lib/circulationStorage";
@@ -9,7 +20,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { BookOpen } from "lucide-react";
 
 export const Route = createFileRoute("/dashboard")({
   head: () => ({
@@ -40,6 +50,7 @@ function DashboardPage() {
     if (!loading && !user) navigate({ to: "/auth", replace: true });
   }, [loading, user, navigate]);
 
+  // Fetch student profile details
   const { data: profile } = useQuery({
     queryKey: ["my-profile", user?.id],
     enabled: !!user,
@@ -62,6 +73,7 @@ function DashboardPage() {
     },
   });
 
+  // Fetch student issues
   const { data: issues = [], isLoading } = useQuery<IssueRecord[]>({
     queryKey: ["my-issues", user?.id],
     enabled: !!user,
@@ -81,90 +93,282 @@ function DashboardPage() {
   const nextDue = [...active].sort((a, b) => daysUntil(a.due_date) - daysUntil(b.due_date))[0];
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-[#F5F6FA] text-[#1F2937]">
       <SiteNav />
-      <main className="mx-auto max-w-6xl px-4 py-12">
-        <h1 className="font-display text-3xl font-semibold md:text-4xl">My dashboard</h1>
-        <p className="mt-2 text-muted-foreground">
-          Everything on your library account — your details, what you are reading and when it is due back.
-        </p>
 
-        <div className="mt-8 grid gap-6 lg:grid-cols-3">
-          <Card className="surface-paper lg:col-span-1">
-            <CardHeader>
-              <CardTitle className="text-lg">Profile</CardTitle>
+      {/* Header Banner */}
+      <section className="border-b border-[#E2E8F0] bg-white py-8 shadow-xs">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[#6C4AB6]">
+                <User className="size-4" /> Personal Library Desk
+              </div>
+              <h1 className="mt-1 font-display text-3xl font-bold tracking-tight text-[#14213D] sm:text-4xl">
+                My Dashboard
+              </h1>
+              <p className="mt-1 text-sm text-[#64748B]">
+                Welcome back, <span className="font-semibold text-[#14213D]">{fullName || user?.email?.split("@")[0] || "Student"}</span>. Track your active borrowings, due dates, and circulation history.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <Button
+                asChild
+                className="bg-[#6C4AB6] hover:bg-[#8B5CF6] text-white shadow-xs text-xs font-semibold"
+              >
+                <Link to="/books">
+                  <BookOpen className="size-3.5 mr-1.5" /> Borrow More Books
+                </Link>
+              </Button>
+              <Button
+                asChild
+                variant="outline"
+                className="border-[#1D3557] text-[#1D3557] hover:bg-slate-50 text-xs font-semibold"
+              >
+                <Link to="/circulation">Return Books</Link>
+              </Button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 space-y-10">
+        {/* Profile & Metric Cards Overview */}
+        <div className="grid gap-6 lg:grid-cols-3">
+          {/* Student Profile Card */}
+          <Card className="rounded-2xl border border-[#E2E8F0] bg-white shadow-sm lg:col-span-1">
+            <CardHeader className="border-b border-[#F1F5F9] pb-4">
+              <div className="flex items-center gap-3">
+                <div className="flex size-11 items-center justify-center rounded-xl bg-[#F0EBFA] text-[#6C4AB6] border border-[#DDD6FE]">
+                  {role === "librarian" ? <Shield className="size-6" /> : <User className="size-6" />}
+                </div>
+                <div>
+                  <CardTitle className="text-base font-bold text-[#14213D] font-display">
+                    Account Profile
+                  </CardTitle>
+                  <p className="text-xs text-[#64748B]">Smart-Shelf Membership</p>
+                </div>
+              </div>
             </CardHeader>
-            <CardContent className="space-y-3 text-sm">
+            <CardContent className="pt-5 space-y-4 text-sm">
               <div>
-                <p className="text-xs uppercase tracking-wide text-muted-foreground">Name</p>
-                <p className="font-medium">{profile?.full_name || fullName || "—"}</p>
+                <span className="text-[11px] font-bold uppercase tracking-wider text-[#64748B]">
+                  Full Name
+                </span>
+                <p className="font-semibold text-[#14213D] mt-0.5">
+                  {profile?.full_name || fullName || "College Student"}
+                </p>
               </div>
+
               <div>
-                <p className="text-xs uppercase tracking-wide text-muted-foreground">Email</p>
-                <p className="font-medium break-all">{profile?.email || user?.email || "—"}</p>
+                <span className="text-[11px] font-bold uppercase tracking-wider text-[#64748B]">
+                  College Email
+                </span>
+                <p className="font-medium text-[#14213D] mt-0.5 break-all">
+                  {profile?.email || user?.email || "—"}
+                </p>
               </div>
-              <div>
-                <p className="text-xs uppercase tracking-wide text-muted-foreground">Membership</p>
-                <Badge variant="secondary" className="mt-1 uppercase tracking-wide">
-                  {role ?? "student"}
-                </Badge>
-              </div>
-              <div>
-                <p className="text-xs uppercase tracking-wide text-muted-foreground">Member since</p>
-                <p className="font-medium">{formatDate(profile?.created_at)}</p>
+
+              <div className="flex items-center justify-between pt-2 border-t border-[#F1F5F9]">
+                <div>
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-[#64748B]">
+                    Role
+                  </span>
+                  <div className="mt-1">
+                    <Badge
+                      className={
+                        role === "librarian"
+                          ? "bg-purple-100 text-[#6C4AB6] border-purple-200 uppercase tracking-wide font-semibold text-[10px]"
+                          : "bg-blue-50 text-[#1D3557] border-blue-200 uppercase tracking-wide font-semibold text-[10px]"
+                      }
+                    >
+                      {role ?? "student"}
+                    </Badge>
+                  </div>
+                </div>
+
+                <div className="text-right">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-[#64748B]">
+                    Member Since
+                  </span>
+                  <p className="text-xs font-semibold text-[#14213D] mt-1">
+                    {formatDate(profile?.created_at || user?.created_at)}
+                  </p>
+                </div>
               </div>
             </CardContent>
           </Card>
 
+          {/* 4 Key Statistics Cards */}
           <div className="grid gap-4 sm:grid-cols-2 lg:col-span-2">
-            {[
-              { label: "Books issued", value: active.length },
-              { label: "Overdue", value: overdue.length },
-              { label: "Returned", value: returned.length },
-              {
-                label: "Next due date",
-                value: nextDue ? formatDate(nextDue.due_date) : "—",
-              },
-            ].map((s) => (
-              <Card key={s.label} className="surface-paper">
-                <CardContent className="pt-6">
-                  <p className="text-xs uppercase tracking-wide text-muted-foreground">{s.label}</p>
-                  <p className="font-display text-2xl font-semibold">{s.value}</p>
-                </CardContent>
-              </Card>
-            ))}
+            <Card className="rounded-2xl border border-[#E2E8F0] bg-white p-6 shadow-sm hover:border-[#6C4AB6]/40 transition-all">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold uppercase tracking-wider text-[#64748B]">
+                  Books Currently Issued
+                </span>
+                <div className="flex size-9 items-center justify-center rounded-lg bg-[#F0EBFA] text-[#6C4AB6]">
+                  <BookOpen className="size-4" />
+                </div>
+              </div>
+              <div className="mt-4 flex items-baseline gap-2">
+                <span className="font-display text-3xl font-bold text-[#14213D]">{active.length}</span>
+                <span className="text-xs text-[#64748B]">active loans</span>
+              </div>
+            </Card>
+
+            <Card
+              className={`rounded-2xl border p-6 shadow-sm transition-all ${
+                overdue.length > 0
+                  ? "border-rose-200 bg-rose-50/50"
+                  : "border-[#E2E8F0] bg-white hover:border-[#6C4AB6]/40"
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold uppercase tracking-wider text-[#64748B]">
+                  Overdue Books
+                </span>
+                <div
+                  className={`flex size-9 items-center justify-center rounded-lg ${
+                    overdue.length > 0
+                      ? "bg-rose-100 text-[#DC2626]"
+                      : "bg-slate-100 text-slate-500"
+                  }`}
+                >
+                  <AlertTriangle className="size-4" />
+                </div>
+              </div>
+              <div className="mt-4 flex items-baseline gap-2">
+                <span
+                  className={`font-display text-3xl font-bold ${
+                    overdue.length > 0 ? "text-[#DC2626]" : "text-[#14213D]"
+                  }`}
+                >
+                  {overdue.length}
+                </span>
+                <span className="text-xs text-[#64748B]">
+                  {overdue.length > 0 ? "requires immediate return" : "all on schedule"}
+                </span>
+              </div>
+            </Card>
+
+            <Card className="rounded-2xl border border-[#E2E8F0] bg-white p-6 shadow-sm hover:border-[#6C4AB6]/40 transition-all">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold uppercase tracking-wider text-[#64748B]">
+                  Past Books Returned
+                </span>
+                <div className="flex size-9 items-center justify-center rounded-lg bg-emerald-50 text-[#15803D]">
+                  <CheckCircle2 className="size-4" />
+                </div>
+              </div>
+              <div className="mt-4 flex items-baseline gap-2">
+                <span className="font-display text-3xl font-bold text-[#14213D]">{returned.length}</span>
+                <span className="text-xs text-[#64748B]">completed returns</span>
+              </div>
+            </Card>
+
+            <Card className="rounded-2xl border border-[#E2E8F0] bg-white p-6 shadow-sm hover:border-[#6C4AB6]/40 transition-all">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold uppercase tracking-wider text-[#64748B]">
+                  Next Due Date
+                </span>
+                <div className="flex size-9 items-center justify-center rounded-lg bg-blue-50 text-[#1D3557]">
+                  <Calendar className="size-4" />
+                </div>
+              </div>
+              <div className="mt-4 flex items-baseline gap-2">
+                <span className="font-display text-2xl font-bold text-[#14213D]">
+                  {nextDue ? formatDate(nextDue.due_date) : "None"}
+                </span>
+                {nextDue && (
+                  <span
+                    className={`text-xs font-semibold ${
+                      daysUntil(nextDue.due_date) < 0
+                        ? "text-[#DC2626]"
+                        : "text-[#15803D]"
+                    }`}
+                  >
+                    ({daysUntil(nextDue.due_date) < 0
+                      ? `${Math.abs(daysUntil(nextDue.due_date))}d overdue`
+                      : `${daysUntil(nextDue.due_date)}d left`})
+                  </span>
+                )}
+              </div>
+            </Card>
           </div>
         </div>
 
-        <section className="mt-12">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-xl font-semibold">Books I have issued</h2>
-            <Button asChild variant="outline" size="sm">
-              <Link to="/circulation">Manage returns</Link>
-            </Button>
+        {/* Section: Currently Issued Books */}
+        <section className="space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#E2E8F0] pb-4">
+            <div>
+              <h2 className="text-xl font-bold text-[#14213D] font-display flex items-center gap-2">
+                <Clock className="size-5 text-[#6C4AB6]" /> Books Currently Issued
+              </h2>
+              <p className="text-xs text-[#64748B] mt-0.5">
+                Active borrowings with 14-day tracking. Return on time to keep library records clear.
+              </p>
+            </div>
+            {active.length > 0 && (
+              <Button
+                asChild
+                size="sm"
+                variant="outline"
+                className="border-[#6C4AB6] text-[#6C4AB6] hover:bg-[#F0EBFA] text-xs font-semibold shrink-0"
+              >
+                <Link to="/circulation">Manage in Circulation</Link>
+              </Button>
+            )}
           </div>
 
           {isLoading ? (
-            <p className="mt-4 text-muted-foreground">Loading…</p>
+            <div className="rounded-2xl border border-[#E2E8F0] bg-white p-8 text-center text-sm text-[#64748B]">
+              Loading your library loans…
+            </div>
           ) : active.length === 0 ? (
-            <Card className="surface-paper mt-4">
-              <CardContent className="flex flex-col items-start gap-3 pt-6">
-                <p className="text-muted-foreground">You have no books issued right now.</p>
-                <Button asChild>
-                  <Link to="/books">Browse the catalog</Link>
-                </Button>
-              </CardContent>
+            <Card className="rounded-2xl border border-dashed border-[#CBD5E1] bg-white p-10 text-center">
+              <div className="flex size-14 items-center justify-center rounded-2xl bg-[#F0EBFA] text-[#6C4AB6] mx-auto mb-3">
+                <BookOpen className="size-7" />
+              </div>
+              <h3 className="font-display text-base font-bold text-[#14213D]">
+                No Books Currently Issued
+              </h3>
+              <p className="text-xs text-[#64748B] mt-1 max-w-sm mx-auto">
+                You do not have any active book loans. Explore the catalog to discover interesting titles and borrow
+                them for 14 days.
+              </p>
+              <Button
+                asChild
+                className="mt-5 bg-[#6C4AB6] hover:bg-[#8B5CF6] text-white text-xs font-semibold"
+              >
+                <Link to="/books">
+                  Browse Catalog <ArrowRight className="size-3.5 ml-1" />
+                </Link>
+              </Button>
             </Card>
           ) : (
-            <div className="surface-paper mt-4 overflow-x-auto rounded-lg">
+            <div className="overflow-hidden rounded-2xl border border-[#E2E8F0] bg-white shadow-sm">
               <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Book</TableHead>
-                    <TableHead>Category</TableHead>
-                    <TableHead>Issued</TableHead>
-                    <TableHead>Due</TableHead>
-                    <TableHead>Status</TableHead>
+                <TableHeader className="bg-slate-50/80">
+                  <TableRow className="border-[#E2E8F0]">
+                    <TableHead className="text-xs font-bold uppercase tracking-wider text-[#14213D]">
+                      Book Details
+                    </TableHead>
+                    <TableHead className="text-xs font-bold uppercase tracking-wider text-[#14213D]">
+                      Category
+                    </TableHead>
+                    <TableHead className="text-xs font-bold uppercase tracking-wider text-[#14213D]">
+                      Issue Date
+                    </TableHead>
+                    <TableHead className="text-xs font-bold uppercase tracking-wider text-[#14213D]">
+                      Due Date
+                    </TableHead>
+                    <TableHead className="text-xs font-bold uppercase tracking-wider text-[#14213D]">
+                      Loan Status
+                    </TableHead>
+                    <TableHead className="text-right text-xs font-bold uppercase tracking-wider text-[#14213D]">
+                      Action
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -176,40 +380,68 @@ function DashboardPage() {
                     const coverUrl = row.books?.cover_url;
 
                     return (
-                      <TableRow key={row.id}>
-                        <TableCell>
-                          <div className="flex items-center gap-3">
+                      <TableRow key={row.id} className="border-[#E2E8F0] hover:bg-slate-50/60 transition-colors">
+                        <TableCell className="py-4">
+                          <div className="flex items-center gap-3.5">
                             {coverUrl ? (
                               <img
                                 src={coverUrl}
                                 alt={bookTitle}
-                                className="h-12 w-9 rounded object-cover shadow-sm bg-muted flex-shrink-0"
+                                className="h-14 w-10 rounded-md object-cover shadow-xs border border-[#E2E8F0] bg-slate-100 flex-shrink-0"
                                 onError={(e) => {
                                   (e.currentTarget as HTMLImageElement).style.display = "none";
                                 }}
                               />
                             ) : (
-                              <div className="flex h-12 w-9 items-center justify-center rounded bg-primary/10 text-primary flex-shrink-0">
-                                <BookOpen className="size-4" />
+                              <div className="flex h-14 w-10 items-center justify-center rounded-md bg-[#F0EBFA] text-[#6C4AB6] border border-[#DDD6FE] flex-shrink-0">
+                                <BookOpen className="size-5" />
                               </div>
                             )}
                             <div>
-                              <p className="font-medium">{bookTitle}</p>
-                              <p className="text-xs text-muted-foreground">{bookAuthor}</p>
+                              <p className="font-bold text-[#14213D] leading-snug">{bookTitle}</p>
+                              <p className="text-xs text-[#64748B] mt-0.5">{bookAuthor}</p>
                             </div>
                           </div>
                         </TableCell>
+
                         <TableCell>
-                          <Badge variant="outline">{category}</Badge>
+                          <Badge className="bg-[#F0EBFA] text-[#6C4AB6] border-[#DDD6FE] font-medium text-xs">
+                            {category}
+                          </Badge>
                         </TableCell>
-                        <TableCell>{formatDate(row.issued_at)}</TableCell>
-                        <TableCell>{formatDate(row.due_date)}</TableCell>
+
+                        <TableCell className="text-xs font-semibold text-[#1F2937]">
+                          {formatDate(row.issued_at)}
+                        </TableCell>
+
+                        <TableCell className="text-xs font-semibold text-[#1F2937]">
+                          {formatDate(row.due_date)}
+                        </TableCell>
+
                         <TableCell>
                           {left < 0 ? (
-                            <Badge variant="destructive">{Math.abs(left)} days overdue</Badge>
+                            <Badge className="bg-rose-50 text-[#B91C1C] border-rose-200 font-semibold text-xs">
+                              <AlertTriangle className="size-3 mr-1 text-[#B91C1C]" /> {Math.abs(left)} days overdue
+                            </Badge>
+                          ) : left <= 3 ? (
+                            <Badge className="bg-amber-50 text-[#92400E] border-amber-200 font-semibold text-xs">
+                              <Clock className="size-3 mr-1 text-[#92400E]" /> Due in {left} days
+                            </Badge>
                           ) : (
-                            <Badge variant="secondary">{left} days left</Badge>
+                            <Badge className="bg-emerald-50 text-[#15803D] border-emerald-200 font-semibold text-xs">
+                              <CheckCircle2 className="size-3 mr-1 text-[#15803D]" /> {left} days left
+                            </Badge>
                           )}
+                        </TableCell>
+
+                        <TableCell className="text-right">
+                          <Button
+                            asChild
+                            size="sm"
+                            className="bg-[#14213D] hover:bg-[#1D3557] text-white text-xs font-semibold shadow-xs"
+                          >
+                            <Link to="/circulation">Return Book</Link>
+                          </Button>
                         </TableCell>
                       </TableRow>
                     );
@@ -220,47 +452,83 @@ function DashboardPage() {
           )}
         </section>
 
+        {/* Section: Past Borrowings History */}
         {returned.length > 0 && (
-          <section className="mt-12">
-            <h2 className="text-xl font-semibold">Past borrowings</h2>
-            <div className="surface-paper mt-4 overflow-x-auto rounded-lg">
+          <section className="space-y-4">
+            <div className="border-b border-[#E2E8F0] pb-4">
+              <h2 className="text-xl font-bold text-[#14213D] font-display flex items-center gap-2">
+                <History className="size-5 text-[#15803D]" /> Borrowing History
+              </h2>
+              <p className="text-xs text-[#64748B] mt-0.5">
+                Past loans that have been successfully returned to the college library.
+              </p>
+            </div>
+
+            <div className="overflow-hidden rounded-2xl border border-[#E2E8F0] bg-white shadow-sm">
               <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Book</TableHead>
-                    <TableHead>Category</TableHead>
-                    <TableHead>Issued</TableHead>
-                    <TableHead>Due</TableHead>
-                    <TableHead>Returned</TableHead>
+                <TableHeader className="bg-slate-50/80">
+                  <TableRow className="border-[#E2E8F0]">
+                    <TableHead className="text-xs font-bold uppercase tracking-wider text-[#14213D]">
+                      Book Title
+                    </TableHead>
+                    <TableHead className="text-xs font-bold uppercase tracking-wider text-[#14213D]">
+                      Category
+                    </TableHead>
+                    <TableHead className="text-xs font-bold uppercase tracking-wider text-[#14213D]">
+                      Issued On
+                    </TableHead>
+                    <TableHead className="text-xs font-bold uppercase tracking-wider text-[#14213D]">
+                      Due Date
+                    </TableHead>
+                    <TableHead className="text-xs font-bold uppercase tracking-wider text-[#14213D]">
+                      Returned On
+                    </TableHead>
+                    <TableHead className="text-right text-xs font-bold uppercase tracking-wider text-[#14213D]">
+                      Status
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {returned.map((row) => (
-                    <TableRow key={row.id}>
-                      <TableCell>
+                    <TableRow key={row.id} className="border-[#E2E8F0] hover:bg-slate-50/60 transition-colors">
+                      <TableCell className="py-3">
                         <div className="flex items-center gap-3">
                           {row.books?.cover_url && (
                             <img
                               src={row.books.cover_url}
                               alt={row.books.title}
-                              className="h-10 w-7 rounded object-cover shadow-xs bg-muted flex-shrink-0"
+                              className="h-10 w-7 rounded object-cover shadow-xs border border-[#E2E8F0] bg-slate-100 flex-shrink-0"
                               onError={(e) => {
                                 (e.currentTarget as HTMLImageElement).style.display = "none";
                               }}
                             />
                           )}
                           <div>
-                            <p className="font-medium">{row.books?.title || "Library Book"}</p>
-                            <p className="text-xs text-muted-foreground">{row.books?.author || "Catalog Title"}</p>
+                            <p className="font-semibold text-[#14213D] leading-tight">
+                              {row.books?.title || "Library Book"}
+                            </p>
+                            <p className="text-xs text-[#64748B]">{row.books?.author || "Catalog Title"}</p>
                           </div>
                         </div>
                       </TableCell>
+
                       <TableCell>
-                        <Badge variant="outline">{row.books?.category || "General"}</Badge>
+                        <Badge className="bg-slate-100 text-[#1F2937] border-slate-200 text-xs">
+                          {row.books?.category || "General"}
+                        </Badge>
                       </TableCell>
-                      <TableCell>{formatDate(row.issued_at)}</TableCell>
-                      <TableCell>{formatDate(row.due_date)}</TableCell>
-                      <TableCell>{formatDate(row.returned_at)}</TableCell>
+
+                      <TableCell className="text-xs text-[#64748B]">{formatDate(row.issued_at)}</TableCell>
+                      <TableCell className="text-xs text-[#64748B]">{formatDate(row.due_date)}</TableCell>
+                      <TableCell className="text-xs font-semibold text-[#15803D]">
+                        {formatDate(row.returned_at)}
+                      </TableCell>
+
+                      <TableCell className="text-right">
+                        <Badge className="bg-emerald-50 text-[#15803D] border-emerald-200 text-xs font-semibold">
+                          <CheckCircle2 className="size-3 mr-1" /> Returned
+                        </Badge>
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
