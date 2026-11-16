@@ -164,28 +164,29 @@ function Home() {
   }, [books]);
 
   return (
-    <div className="min-h-screen bg-[#F5F6FA] text-[#1F2937]">
+    <div className="min-h-screen bg-[#FCFBF8] text-[#1F2937]">
       <SiteNav />
 
       <main>
         {/* ================= HERO SECTION ================= */}
-        <section className="relative overflow-hidden border-b border-slate-200 bg-white shadow-xs">
-          {/* Classic Library Bookshelf Background Image with Smooth Light Overlay */}
-          <div className="absolute inset-0 pointer-events-none -z-10 overflow-hidden">
+        <section className="relative overflow-hidden border-b border-slate-200 bg-[#FCFBF8]">
+          {/* Bookshelf image ONLY on the right side — hidden on mobile, visible md+ */}
+          <div className="pointer-events-none absolute inset-y-0 right-0 -z-10 hidden w-[55%] overflow-hidden md:block">
             <img
               src="https://images.unsplash.com/photo-1507842229451-7f01dd8629d8?auto=format&fit=crop&w=2400&q=90"
-              alt="Classic College Library Bookshelves"
-              className="h-full w-full object-cover object-right md:object-center"
+              alt="Multi-level wooden bookshelves filled with books"
+              className="h-full w-full object-cover object-center"
             />
-            {/* Smooth Horizontal/Angled Light White-to-Cream Gradient Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-r from-white/95 via-white/85 to-white/40" />
-            <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-[#F5F6FA] to-transparent" />
+            {/* Soft left-edge fade so the image blends into the off-white area */}
+            <div className="absolute inset-0 bg-gradient-to-r from-[#FCFBF8] via-[#FCFBF8]/60 to-transparent" />
+            {/* Subtle bottom fade */}
+            <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-[#FCFBF8] to-transparent" />
           </div>
 
           <div className="relative mx-auto grid max-w-7xl gap-12 px-4 py-20 sm:px-6 md:grid-cols-[1.2fr_0.9fr] md:items-center lg:py-28 lg:px-8">
-            {/* Left Content */}
+            {/* Left Content — sits on the clean off-white background */}
             <div>
-              <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-purple-200 bg-white/90 backdrop-blur-md px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-[#6C4AB6] shadow-xs">
+              <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-purple-200 bg-white/80 px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-[#6C4AB6] shadow-xs">
                 <Sparkles className="size-3.5 text-[#6C4AB6]" /> College Library Management System
               </div>
 
@@ -218,7 +219,7 @@ function Home() {
                     asChild
                     size="lg"
                     variant="outline"
-                    className="bg-white/90 hover:bg-white text-slate-800 border-slate-300 font-semibold shadow-xs text-base px-6 h-12 transition-all"
+                    className="bg-white hover:bg-slate-50 text-slate-800 border-slate-300 font-semibold shadow-xs text-base px-6 h-12 transition-all"
                   >
                     <Link to="/dashboard">
                       <LayoutDashboard className="size-4 mr-2 text-[#6C4AB6]" /> My Dashboard
@@ -229,7 +230,7 @@ function Home() {
                     asChild
                     size="lg"
                     variant="outline"
-                    className="bg-white/90 hover:bg-white text-slate-800 border-slate-300 font-semibold shadow-xs text-base px-6 h-12 transition-all"
+                    className="bg-white hover:bg-slate-50 text-slate-800 border-slate-300 font-semibold shadow-xs text-base px-6 h-12 transition-all"
                   >
                     <Link to="/auth">Create an Account</Link>
                   </Button>
@@ -250,8 +251,8 @@ function Home() {
               </div>
             </div>
 
-            {/* Right Card: Shelf at a Glance (Dynamic Statistics with Glassmorphism) */}
-            <div className="rounded-2xl p-7 bg-white/90 backdrop-blur-md shadow-xl border border-white/60 text-slate-800 transition-all">
+            {/* Right Card: Shelf at a Glance — glassmorphism over the bookshelf image */}
+            <div className="rounded-2xl p-7 bg-white/95 backdrop-blur-md shadow-2xl border border-white/60 text-slate-800 transition-all">
               <div className="flex items-center justify-between border-b border-slate-200/70 pb-4">
                 <div className="flex items-center gap-2.5">
                   <span className="flex size-9 items-center justify-center rounded-xl bg-purple-100/80 text-[#6C4AB6] border border-purple-200/60 shadow-2xs">
