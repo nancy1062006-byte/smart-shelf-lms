@@ -10,12 +10,14 @@ import {
   Filter,
   Check,
   RotateCcw,
+  Eye,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/lib/session";
 import { ALL_CATEGORIES, mergeBooksWithCatalog, type CatalogBook } from "@/data/booksCatalog";
 import { fetchMergedIssues, executeIssueBook, normalizeIsbn } from "@/lib/circulationStorage";
 import { SiteNav } from "@/components/SiteNav";
+import { BookReader } from "@/components/BookReader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -48,6 +50,7 @@ function BooksPage() {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("All");
   const [onlyAvailable, setOnlyAvailable] = useState(false);
+  const [readerBook, setReaderBook] = useState<CatalogBook | null>(null);
 
   // Fetch remote books and merge with catalog
   const { data: rawBooks = [], isLoading } = useQuery({
@@ -151,6 +154,13 @@ function BooksPage() {
   return (
     <div className="min-h-screen bg-[#F5F6FA] text-[#1F2937]">
       <SiteNav />
+
+      {/* BookReader Modal */}
+      <BookReader
+        open={!!readerBook}
+        onClose={() => setReaderBook(null)}
+        book={readerBook}
+      />
 
       {/* Page Header */}
       <section className="border-b border-[#E2E8F0] bg-white py-10 shadow-xs">
@@ -404,8 +414,19 @@ function BooksPage() {
                       )}
                     </div>
 
-                    {/* Action Button */}
-                    <div className="mt-4 pt-1">
+                    {/* Action Buttons */}
+                    <div className="mt-4 pt-1 flex flex-col gap-2">
+                      {/* Read Preview Button — always visible */}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full border-[#6C4AB6]/40 text-[#6C4AB6] hover:bg-[#F0EBFA] hover:border-[#6C4AB6] text-xs font-semibold transition-all"
+                        onClick={() => setReaderBook(book)}
+                      >
+                        <Eye className="size-3.5 mr-1.5" /> Read Preview / Study Guide
+                      </Button>
+
+                      {/* Borrow / Issue Button */}
                       {user ? (
                         issued ? (
                           <Button

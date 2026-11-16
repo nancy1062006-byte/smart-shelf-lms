@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
   BookOpen,
   CalendarClock,
@@ -14,11 +14,13 @@ import {
   TrendingUp,
   Sparkles,
   UserCheck,
+  Eye,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { mergeBooksWithCatalog, type CatalogBook } from "@/data/booksCatalog";
 import { useSession } from "@/lib/session";
 import { SiteNav } from "@/components/SiteNav";
+import { BookReader } from "@/components/BookReader";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -116,6 +118,7 @@ const workflowSteps = [
 
 function Home() {
   const { user } = useSession();
+  const [readerBook, setReaderBook] = useState<CatalogBook | null>(null);
 
   // Fetch books from database and merge with catalog
   const { data: books = [], isLoading } = useQuery<CatalogBook[]>({
@@ -166,6 +169,8 @@ function Home() {
   return (
     <div className="min-h-screen bg-[#FCFBF8] text-[#1F2937]">
       <SiteNav />
+      {/* Book Reader Modal — available from homepage popular cards */}
+      <BookReader open={!!readerBook} onClose={() => setReaderBook(null)} book={readerBook} />
 
       <main>
         {/* ================= HERO SECTION ================= */}
@@ -431,7 +436,15 @@ function Home() {
                     {book.isbn && <span className="text-[10px] text-slate-400">ISBN: {book.isbn.slice(-6)}</span>}
                   </div>
 
-                  <div className="mt-4 pt-1">
+                  <div className="mt-4 pt-1 flex flex-col gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full border-[#6C4AB6]/40 text-[#6C4AB6] hover:bg-[#F0EBFA] hover:border-[#6C4AB6] text-xs font-semibold"
+                      onClick={() => setReaderBook(book)}
+                    >
+                      <Eye className="size-3.5 mr-1.5" /> Read Preview
+                    </Button>
                     <Button
                       asChild
                       size="sm"

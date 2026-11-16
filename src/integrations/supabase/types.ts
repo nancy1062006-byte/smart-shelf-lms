@@ -24,6 +24,8 @@ export type Database = {
           description: string | null
           id: string
           isbn: string | null
+          preview_text?: string | null
+          chapters?: Json | null
           title: string
           total_copies: number
         }
@@ -36,6 +38,8 @@ export type Database = {
           description?: string | null
           id?: string
           isbn?: string | null
+          preview_text?: string | null
+          chapters?: Json | null
           title: string
           total_copies?: number
         }
@@ -48,6 +52,8 @@ export type Database = {
           description?: string | null
           id?: string
           isbn?: string | null
+          preview_text?: string | null
+          chapters?: Json | null
           title?: string
           total_copies?: number
         }

@@ -1,5 +1,6 @@
 // Smart-Shelf Library Catalog - 12 Categories with at least 5 books each
 // Keeps all original books intact and guarantees full coverage of all 12 categories.
+import { getBookContent, type BookChapter, type BookContentData } from "./bookContent";
 
 export const ALL_CATEGORIES = [
   "Psychology",
@@ -29,6 +30,9 @@ export type CatalogBook = {
   available_copies: number;
   cover_url?: string | null;
   created_at?: string;
+  preview_text?: string | null;
+  chapters?: BookChapter[] | null;
+  key_takeaways?: string[] | null;
 };
 
 export const DEFAULT_BOOKS: CatalogBook[] = [
@@ -776,13 +780,19 @@ export function mergeBooksWithCatalog(remoteBooks: any[] = []): CatalogBook[] {
     .map((b) => {
       const cleanIsbn = b.isbn ? b.isbn.replace(/[\s-]/g, "") : "";
       const ov = overrides[b.id || ""] || overrides[cleanIsbn] || overrides[b.title];
-      if (ov && typeof ov.available === "number") {
-        return {
-          ...b,
-          available_copies: Math.min(b.total_copies, Math.max(0, ov.available)),
-        };
-      }
-      return b;
+      const available = ov && typeof ov.available === "number"
+        ? Math.min(b.total_copies, Math.max(0, ov.available))
+        : b.available_copies;
+      
+      const content = getBookContent(b.isbn) || getBookContent(b.title);
+
+      return {
+        ...b,
+        available_copies: available,
+        preview_text: b.preview_text || content?.preview_text || b.description || null,
+        chapters: b.chapters || content?.chapters || null,
+        key_takeaways: b.key_takeaways || content?.key_takeaways || null,
+      };
     })
     .sort((a, b) => a.title.localeCompare(b.title));
 }
